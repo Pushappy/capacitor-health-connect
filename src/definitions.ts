@@ -39,30 +39,36 @@ export interface HealthConnectPlugin {
 }
 export type HealthConnectAvailability = 'Available' | 'NotInstalled' | 'NotSupported';
 export type RecordType = 
-  | 'ActiveCalories'
+  | 'ActiveCaloriesBurned'
   | 'BasalBodyTemperature'
   | 'BasalMetabolicRate'
   | 'BloodGlucose'
   | 'BloodPressure'
+  | 'HeartRate'
+  | 'HeartRateVariabilityRmssdRecord'
   | 'Height'
-  | 'Weight'
-  | 'Steps';
+  | 'OxygenSaturation'
+  | 'RestingHeartRate'
+  | 'SleepSession'
+  | 'Steps'
+  | 'Vo2Max'
+  | 'Weight';
 type RecordBase = {
   metadata: RecordMetadata;
 };
 type StoredRecord = RecordBase & Record;
 export type Record =
   | {
-      type: 'ActiveCalories';
-      startTime: Date;
+      type: 'ActiveCaloriesBurned';
+      startTime: string;
       startZoneOffset?: string;
-      endTime: Date;
+      endTime: string;
       endZoneOffset?: string;
       energy: Energy;
     }
   | {
       type: 'BasalBodyTemperature';
-      time: Date;
+      time: string;
       zoneOffset?: string;
       temperature: Temperature;
       measurementLocation:
@@ -80,13 +86,13 @@ export type Record =
     }
   | {
       type: 'BasalMetabolicRate';
-      time: Date;
+      time: string;
       zoneOffset?: string;
       basalMetabolicRate: Power;
     }
   | {
       type: 'BloodGlucose';
-      time: Date;
+      time: string;
       zoneOffset?: string;
       level: BloodGlucose;
       specimenSource:
@@ -102,7 +108,7 @@ export type Record =
     }
   | {
       type: 'BloodPressure';
-      time: Date;
+      time: string;
       zoneOffset?: string;
       systolic: Pressure;
       diastolic: Pressure;
@@ -111,29 +117,60 @@ export type Record =
     }
   | {
       type: 'Height';
-      time: Date;
+      time: string;
       zoneOffset?: string;
       height: Length;
     }
   | {
-      type: 'Weight';
-      time: Date;
+      type: 'HeartRate';
+      startTime: string;
+      startZoneOffset?: string;
+      endTime: string;
+      endZoneOffset?: string;
+      samples: HeartRateSample[]
+    }
+  | {
+      type: 'HeartRateVariabilityRmssd';
+      time: string;
       zoneOffset?: string;
-      weight: Mass;
+      heartRateVariabilityMillis: number;
+    }
+  | {
+      type: 'SleepSession';
+      startTime: string;
+      startZoneOffset?: string;
+      endTime: string;
+      endZoneOffset?: string;
+      title?: string;
+      notes?: string;
+      stages: SleepSessionStage[];
     }
   | {
       type: 'Steps';
-      startTime: Date;
+      startTime: string;
       startZoneOffset?: string;
-      endTime: Date;
+      endTime: string;
       endZoneOffset?: string;
       count: number;
+    }
+  | {
+      type: 'Vo2Max';
+      time: string;
+      zoneOffset?: string;
+      vo2MillilitersPerMinuteKilogram: number;
+      measurementMethod: 'metabolic_cart' | 'heart_rate_ratio' | 'cooper_test' | 'multistage_fitness_test' | 'rockport_fitness_test' | 'other';
+    }
+  | {
+      type: 'Weight';
+      time: string;
+      zoneOffset?: string;
+      weight: Mass;
     };
 export type RecordMetadata = {
   id: string;
   clientRecordId?: string;
   clientRecordVersion: number;
-  lastModifiedTime: Date;
+  lastModifiedTime: string;
   dataOrigin: string;
 };
 export type Change =
@@ -148,14 +185,23 @@ export type Change =
 export type TimeRangeFilter =
   | {
       type: 'before' | 'after';
-      time: Date;
+      time: string;
     }
   | {
       type: 'between';
-      startTime: Date;
-      endTime: Date;
+      startTime: string;
+      endTime: string;
     };
 
+export type HeartRateSample = {
+  time: string;
+  beatsPerMinute: numbe;
+};
+export type SleepSessionStage = {
+  startTime: string;
+  endTime: string;
+  stage: 'awake' | 'sleeping' | 'out_of_bed' | 'light' | 'deep' | 'rem' | 'awake_in_bed' | 'unknown';
+};
 export type Energy = {
   unit: 'calories' | 'kilocalories' | 'joules' | 'kilojoules';
   value: number;

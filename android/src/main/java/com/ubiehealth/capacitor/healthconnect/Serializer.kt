@@ -3,7 +3,6 @@ package com.ubiehealth.capacitor.healthconnect
 import androidx.health.connect.client.changes.Change
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
-import androidx.health.connect.client.impl.converters.datatype.RECORDS_CLASS_NAME_MAP
 import androidx.health.connect.client.records.*
 import androidx.health.connect.client.records.BodyTemperatureMeasurementLocation.MEASUREMENT_LOCATION_INT_TO_STRING_MAP
 import androidx.health.connect.client.records.BodyTemperatureMeasurementLocation.MEASUREMENT_LOCATION_STRING_TO_INT_MAP
@@ -17,6 +16,56 @@ import org.json.JSONObject
 import java.lang.RuntimeException
 import java.time.Instant
 import java.time.ZoneOffset
+import kotlin.reflect.KClass
+
+// We need to be in control of type <-> string mappings since we also do the ts typing
+// and the internal mapping might (it already has in the past) change.
+val RECORDS_TYPE_NAME_MAP: Map<String, KClass<out Record>> =
+    mapOf(
+        "ActiveCaloriesBurned" to ActiveCaloriesBurnedRecord::class,
+        "ExerciseSession" to ExerciseSessionRecord::class,
+        "BasalBodyTemperature" to BasalBodyTemperatureRecord::class,
+        "BasalMetabolicRate" to BasalMetabolicRateRecord::class,
+        "BloodGlucose" to BloodGlucoseRecord::class,
+        "BloodPressure" to BloodPressureRecord::class,
+        "BodyFat" to BodyFatRecord::class,
+        "BodyTemperature" to BodyTemperatureRecord::class,
+        "BodyWaterMass" to BodyWaterMassRecord::class,
+        "BoneMass" to BoneMassRecord::class,
+        "CervicalMucus" to CervicalMucusRecord::class,
+        "CyclingPedalingCadence" to
+                CyclingPedalingCadenceRecord::class,
+        "Distance" to DistanceRecord::class,
+        "ElevationGained" to ElevationGainedRecord::class,
+        "FloorsClimbed" to FloorsClimbedRecord::class,
+        "HeartRate" to HeartRateRecord::class,
+        "HeartRateVariabilityRmssd" to HeartRateVariabilityRmssdRecord::class,
+        "Height" to HeightRecord::class,
+        "Hydration" to HydrationRecord::class,
+        "LeanBodyMass" to LeanBodyMassRecord::class,
+        "Menstruation" to MenstruationFlowRecord::class,
+        "MenstruationPeriod" to MenstruationPeriodRecord::class,
+        "Nutrition" to NutritionRecord::class,
+        "OvulationTest" to OvulationTestRecord::class,
+        "OxygenSaturation" to OxygenSaturationRecord::class,
+        "Power" to PowerRecord::class,
+        "RespiratoryRate" to RespiratoryRateRecord::class,
+        "RestingHeartRate" to RestingHeartRateRecord::class,
+        "SexualActivity" to SexualActivityRecord::class,
+        "SleepSession" to SleepSessionRecord::class,
+        "SleepStage" to SleepStageRecord::class,
+        "Speed" to SpeedRecord::class,
+        "IntermenstrualBleeding" to IntermenstrualBleedingRecord::class,
+        "Steps" to StepsRecord::class,
+        "StepsCadence" to StepsCadenceRecord::class,
+        "TotalCaloriesBurned" to TotalCaloriesBurnedRecord::class,
+        "Vo2Max" to Vo2MaxRecord::class,
+        "WheelchairPushes" to WheelchairPushesRecord::class,
+        "Weight" to WeightRecord::class,
+    )
+
+val RECORDS_CLASS_NAME_MAP: Map<KClass<out Record>, String> =
+    RECORDS_TYPE_NAME_MAP.entries.associate { it.value to it.key }
 
 internal fun <T> JSONArray.toList(): List<T> {
     return (0 until this.length()).map {
@@ -31,7 +80,7 @@ internal fun <T> List<T>.toJSONArray(): JSONArray {
 
 internal fun JSONObject.toRecord(): Record {
     return when (val type = this.get("type")) {
-        "ActiveCalories" -> ActiveCaloriesBurnedRecord(
+        "ActiveCaloriesBurned" -> ActiveCaloriesBurnedRecord(
             startTime = this.getInstant("startTime"),
             startZoneOffset = this.getZoneOffsetOrNull("startZoneOffset"),
             endTime = this.getInstant("endTime"),
@@ -70,15 +119,41 @@ internal fun JSONObject.toRecord(): Record {
             measurementLocation = BloodPressureRecord.MEASUREMENT_LOCATION_STRING_TO_INT_MAP
                 .getOrDefault(this.getString("measurementLocation"), BloodPressureRecord.MEASUREMENT_LOCATION_UNKNOWN),
         )
+        "HeartRate" -> HeartRateRecord(
+            startTime = this.getInstant("startTime"),
+            startZoneOffset = this.getZoneOffsetOrNull("startZoneOffset"),
+            endTime = this.getInstant("endTime"),
+            endZoneOffset = this.getZoneOffsetOrNull("endZoneOffset"),
+            samples = this.getJSONArray("samples").toList<JSONObject>().map { it.getHearRateRecordSample() }
+        )
+        "HeartRateVariabilityRmssd" -> HeartRateVariabilityRmssdRecord(
+            time = this.getInstant("time"),
+            zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
+            heartRateVariabilityMillis = this.getDouble("heartRateVariabilityMillis")
+        )
         "Height" -> HeightRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
             height = this.getLength("height"),
         )
-        "Weight" -> WeightRecord(
+        "OxygenSaturation" -> OxygenSaturationRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
-            weight = this.getMass("weight"),
+            percentage = Percentage(this.getDouble("percentage"))
+        )
+        "RestingHeartRate" -> RestingHeartRateRecord(
+            time = this.getInstant("time"),
+            zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
+            beatsPerMinute = this.getLong("beatsPerMinute")
+        )
+        "SleepSession" -> SleepSessionRecord(
+            startTime = this.getInstant("startTime"),
+            startZoneOffset = this.getZoneOffsetOrNull("startZoneOffset"),
+            endTime = this.getInstant("endTime"),
+            endZoneOffset = this.getZoneOffsetOrNull("endZoneOffset"),
+            title = this.getStringOrNull("title"),
+            notes = this.getStringOrNull("notes"),
+            stages = this.getJSONArray("stages").toList<JSONObject>().map { it.getSleepSessionRecordStage() }
         )
         "Steps" -> StepsRecord(
             startTime = this.getInstant("startTime"),
@@ -87,7 +162,17 @@ internal fun JSONObject.toRecord(): Record {
             endZoneOffset = this.getZoneOffsetOrNull("endZoneOffset"),
             count = this.getLong("count"),
         )
-
+        "Vo2Max" -> Vo2MaxRecord(
+            time = this.getInstant("time"),
+            zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
+            vo2MillilitersPerMinuteKilogram = this.getDouble("vo2MillilitersPerMinuteKilogram"),
+            measurementMethod = Vo2MaxRecord.MEASUREMENT_METHOD_STRING_TO_INT_MAP.getOrDefault(this.getString("measurementMethod"), Vo2MaxRecord.MEASUREMENT_METHOD_OTHER)
+        )
+        "Weight" -> WeightRecord(
+            time = this.getInstant("time"),
+            zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
+            weight = this.getMass("weight"),
+        )
         else -> throw IllegalArgumentException("Unexpected record type: $type")
     }
 }
@@ -132,15 +217,41 @@ internal fun Record.toJSONObject(): JSONObject {
                 obj.put("bodyPosition", BloodPressureRecord.BODY_POSITION_INT_TO_STRING_MAP.getOrDefault(this.bodyPosition, "unknown"))
                 obj.put("measurementLocation", BloodPressureRecord.MEASUREMENT_LOCATION_INT_TO_STRING_MAP.getOrDefault(this.measurementLocation, "unknown"))
             }
+            is HeartRateRecord -> {
+                obj.put("startTime", this.startTime)
+                obj.put("startZoneOffset", this.startZoneOffset?.toJSONValue())
+                obj.put("endTime", this.endTime)
+                obj.put("endZoneOffset", this.endZoneOffset?.toJSONValue())
+                obj.put("samples", this.samples.map { it.toJSONObject() })
+            }
+            is HeartRateVariabilityRmssdRecord -> {
+                obj.put("time", this.time)
+                obj.put("zoneOffset", this.zoneOffset?.toJSONValue())
+                obj.put("heartRateVariabilityMillis", this.heartRateVariabilityMillis)
+            }
             is HeightRecord -> {
                 obj.put("time", this.time)
                 obj.put("zoneOffset", this.zoneOffset?.toJSONValue())
                 obj.put("height", this.height.toJSONObject())
             }
-            is WeightRecord -> {
+            is OxygenSaturationRecord -> {
                 obj.put("time", this.time)
                 obj.put("zoneOffset", this.zoneOffset?.toJSONValue())
-                obj.put("weight", this.weight.toJSONObject())
+                obj.put("percentage", this.percentage.value)
+            }
+            is RestingHeartRateRecord -> {
+                obj.put("time", this.time)
+                obj.put("zoneOffset", this.zoneOffset?.toJSONValue())
+                obj.put("beatsPerMinute", this.beatsPerMinute)
+            }
+            is SleepSessionRecord -> {
+                obj.put("startTime", this.startTime)
+                obj.put("startZoneOffset", this.startZoneOffset?.toJSONValue())
+                obj.put("endTime", this.endTime)
+                obj.put("endZoneOffset", this.endZoneOffset?.toJSONValue())
+                obj.put("title", this.title)
+                obj.put("notes", this.notes)
+                obj.put("stages", this.stages.map { it.toJSONObject() })
             }
             is StepsRecord -> {
                 obj.put("startTime", this.startTime)
@@ -148,6 +259,17 @@ internal fun Record.toJSONObject(): JSONObject {
                 obj.put("endTime", this.endTime)
                 obj.put("endZoneOffset", this.endZoneOffset?.toJSONValue())
                 obj.put("count", this.count)
+            }
+            is Vo2MaxRecord -> {
+                obj.put("time", this.time)
+                obj.put("zoneOffset", this.zoneOffset?.toJSONValue())
+                obj.put("vo2MillilitersPerMinuteKilogram", this.vo2MillilitersPerMinuteKilogram)
+                obj.put("measurementMethod", Vo2MaxRecord.MEASUREMENT_METHOD_INT_TO_STRING_MAP.getOrDefault(this.measurementMethod, "other"))
+            }
+            is WeightRecord -> {
+                obj.put("time", this.time)
+                obj.put("zoneOffset", this.zoneOffset?.toJSONValue())
+                obj.put("weight", this.weight.toJSONObject())
             }
             else -> throw IllegalArgumentException("Unexpected record class: $${this::class.qualifiedName}")
         }
@@ -180,12 +302,19 @@ internal fun Change.toJSObject(): JSObject {
     }
 }
 
+internal fun JSONObject.getStringOrNull(name: String): String? {
+    return if (!this.isNull(name))
+        this.getString(name)
+    else
+        null
+}
+
 internal fun JSONObject.getInstant(name: String): Instant {
     return Instant.parse(this.getString(name))
 }
 
 internal fun JSONObject.getZoneOffsetOrNull(name: String): ZoneOffset? {
-    return if (this.has(name))
+    return if (!this.isNull(name))
         ZoneOffset.of(this.getString(name))
     else
         null
@@ -193,6 +322,35 @@ internal fun JSONObject.getZoneOffsetOrNull(name: String): ZoneOffset? {
 
 internal fun ZoneOffset.toJSONValue(): String {
     return this.id
+}
+
+internal fun HeartRateRecord.Sample.toJSONObject(): JSONObject {
+    return JSONObject().also { obj ->
+        obj.put("time", this.time)
+        obj.put("beatsPerMinute", this.beatsPerMinute)
+    }
+}
+
+internal fun JSONObject.getHearRateRecordSample(): HeartRateRecord.Sample {
+    val time = this.getInstant("time")
+    val bpm = this.getLong("beatsPerMinute")
+    return HeartRateRecord.Sample(time, bpm)
+}
+
+internal fun SleepSessionRecord.Stage.toJSONObject(): JSONObject {
+    return JSONObject().also { obj ->
+        obj.put("startTime", this.startTime)
+        obj.put("endTime", this.endTime)
+
+        obj.put("stage", SleepSessionRecord.STAGE_TYPE_INT_TO_STRING_MAP.getOrDefault(this.stage, "unknown"))
+    }
+}
+
+internal fun JSONObject.getSleepSessionRecordStage(): SleepSessionRecord.Stage {
+    val starTime = this.getInstant("startTime")
+    val endTime = this.getInstant("endTime")
+    val stage = SleepSessionRecord.STAGE_TYPE_STRING_TO_INT_MAP.getOrDefault(this.getString("stage"), SleepSessionRecord.STAGE_TYPE_UNKNOWN)
+    return SleepSessionRecord.Stage(starTime,endTime, stage)
 }
 
 internal fun JSONObject.getLength(name: String): Length {

@@ -3,28 +3,13 @@ package com.ubiehealth.capacitor.healthconnect
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import androidx.activity.result.ActivityResult
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
-import androidx.health.connect.client.changes.Change
-import androidx.health.connect.client.changes.DeletionChange
-import androidx.health.connect.client.changes.UpsertionChange
-import androidx.health.connect.client.impl.converters.datatype.RECORDS_CLASS_NAME_MAP
 import androidx.health.connect.client.impl.converters.datatype.RECORDS_TYPE_NAME_MAP
-import androidx.health.connect.client.impl.converters.permission.toProtoPermission
 import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.Record
-import androidx.health.connect.client.records.StepsRecord
-import androidx.health.connect.client.records.WeightRecord
-import androidx.health.connect.client.records.metadata.DataOrigin
-import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
-import androidx.health.connect.client.time.TimeRangeFilter
-import androidx.health.connect.client.units.Mass
-import androidx.health.platform.client.proto.PermissionProto
 import androidx.lifecycle.lifecycleScope
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
@@ -33,17 +18,10 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
-import kotlinx.coroutines.flow.flatMap
-import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import org.json.JSONArray
 import org.json.JSONObject
-import java.lang.RuntimeException
-import java.time.Instant
-import java.time.ZoneOffset
-import java.util.Date
 
 @CapacitorPlugin(name = "HealthConnect")
 class HealthConnectPlugin : Plugin() {
@@ -167,7 +145,12 @@ class HealthConnectPlugin : Plugin() {
 
     @PluginMethod
     fun requestHealthPermissions(call: PluginCall) {
-        if (HealthConnectClient.getSdkStatus(this.context) == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
+        val sdkStatus = HealthConnectClient.getSdkStatus(this.context)
+        if (sdkStatus == HealthConnectClient.SDK_UNAVAILABLE) {
+            call.errorCallback("unavailable")
+            return
+        }
+        if (sdkStatus == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.setPackage("com.android.vending")
             intent.data = Uri.parse("market://details")
