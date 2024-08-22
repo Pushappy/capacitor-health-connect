@@ -6,7 +6,6 @@ import android.net.Uri
 import androidx.activity.result.ActivityResult
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
-import androidx.health.connect.client.impl.converters.datatype.RECORDS_TYPE_NAME_MAP
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
@@ -43,6 +42,20 @@ class HealthConnectPlugin : Plugin() {
             put("availability", availability)
         }
         call.resolve(res)
+    }
+
+    @PluginMethod
+    fun ensureInstalled(call: PluginCall) {
+        val intent = installationIntent();
+        startActivityForResult(call, intent, "ensureInstalledCallback")
+    }
+
+    @ActivityCallback
+    fun ensureInstalledCallback(call: PluginCall, activityResult: ActivityResult) {
+        val result = JSObject().apply {
+            put("installed", activityResult.resultCode == Activity.RESULT_OK)
+        }
+        call.resolve(result)
     }
 
     @PluginMethod
@@ -143,23 +156,33 @@ class HealthConnectPlugin : Plugin() {
         }
     }
 
+    private fun installationIntent(): Intent {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setPackage("com.android.vending")
+        intent.data = Uri.parse("market://details")
+            .buildUpon()
+            .appendQueryParameter("id", "com.google.android.apps.healthdata")
+            .appendQueryParameter("url", "healthconnect://onboarding")
+            .build()
+        intent.putExtra("overlay", true)
+        intent.putExtra("callerId", context.packageName)
+        return intent
+    }
+
     @PluginMethod
     fun requestHealthPermissions(call: PluginCall) {
         val sdkStatus = HealthConnectClient.getSdkStatus(this.context)
         if (sdkStatus == HealthConnectClient.SDK_UNAVAILABLE) {
-            call.errorCallback("unavailable")
+            val res = JSObject().apply {
+                put("grantedPermissions", JSArray())
+                put("hasAllPermissions", false)
+            }
+            call.resolve(res)
             return
         }
+
         if (sdkStatus == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.setPackage("com.android.vending")
-            intent.data = Uri.parse("market://details")
-                    .buildUpon()
-                    .appendQueryParameter("id", "com.google.android.apps.healthdata")
-                    .appendQueryParameter("url", "healthconnect://onboarding")
-                    .build()
-            intent.putExtra("overlay", true)
-            intent.putExtra("callerId", context.packageName)
+            val intent = installationIntent()
             startActivityForResult(call, intent, "handleInstalled")
             return
         }
@@ -188,9 +211,14 @@ class HealthConnectPlugin : Plugin() {
         if (result.resultCode == Activity.RESULT_OK) {
             requestHealthPermissions(call)
         } else {
-            call.errorCallback("canceled")
+            val res = JSObject().apply {
+                put("grantedPermissions", JSArray())
+                put("hasAllPermissions", false)
+            }
+            call.resolve(res)
         }
     }
+
 
     @ActivityCallback
     fun handleRequestPermission(call: PluginCall, result: ActivityResult) {

@@ -2,6 +2,9 @@ export interface HealthConnectPlugin {
   checkAvailability(): Promise<{
     availability: HealthConnectAvailability;
   }>;
+  ensureInstalled(): Promise<{
+    installed: boolean;
+  }>;
   insertRecords(options: { records: Record[] }): Promise<{
     recordIds: string[];
   }>;
