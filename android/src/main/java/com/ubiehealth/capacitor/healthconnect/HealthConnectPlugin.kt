@@ -222,22 +222,27 @@ class HealthConnectPlugin : Plugin() {
 
     @ActivityCallback
     fun handleRequestPermission(call: PluginCall, result: ActivityResult) {
-        val reqReadPermissions = call.getArray("read").toList<String>().map {
+        val reqReadPermissions = call.getArray("read").toList<String>().associateBy {
             HealthPermission.getReadPermission(
                     recordType = RECORDS_TYPE_NAME_MAP[it] ?: throw IllegalArgumentException("Unexpected RecordType: $it")
             )
-        }.toSet()
-        val reqWritePermissions = call.getArray("write").toList<String>().map {
+        }
+        val reqWritePermissions = call.getArray("write").toList<String>().associateBy {
             HealthPermission.getWritePermission(
                     recordType = RECORDS_TYPE_NAME_MAP[it] ?: throw IllegalArgumentException("Unexpected RecordType: $it")
             )
-        }.toSet()
+        }
 
         val grantedPermissions = permissionContract.parseResult(result.resultCode, result.data).toSet()
-        val hasAllPermissions = grantedPermissions.containsAll(reqReadPermissions + reqWritePermissions)
+        val hasAllPermissions = grantedPermissions.containsAll(reqReadPermissions.keys + reqWritePermissions.keys)
+
+        val grantedPermissionsResult = JSObject().apply {
+            put("read", JSArray(reqReadPermissions.filterKeys { grantedPermissions.contains(it) }.values))
+            put("write", JSArray(reqWritePermissions.filterKeys { grantedPermissions.contains(it) }.values))
+        }
 
         val res = JSObject().apply {
-            put("grantedPermissions", JSArray(grantedPermissions))
+            put("grantedPermissions", grantedPermissionsResult)
             put("hasAllPermissions", hasAllPermissions)
         }
         call.resolve(res)
@@ -246,24 +251,29 @@ class HealthConnectPlugin : Plugin() {
     @PluginMethod
     fun checkHealthPermissions(call: PluginCall) {
         this.activity.lifecycleScope.launch {
-            val reqReadPermissions = call.getArray("read").toList<String>().map {
+            val reqReadPermissions = call.getArray("read").toList<String>().associateBy {
                 HealthPermission.getReadPermission(
                         recordType = RECORDS_TYPE_NAME_MAP[it]
                                 ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 )
-            }.toSet()
-            val reqWritePermissions = call.getArray("write").toList<String>().map {
+            }
+            val reqWritePermissions = call.getArray("write").toList<String>().associateBy {
                 HealthPermission.getWritePermission(
                         recordType = RECORDS_TYPE_NAME_MAP[it]
                                 ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 )
-            }.toSet()
+            }
 
             val grantedPermissions = healthConnectClient.permissionController.getGrantedPermissions()
-            val hasAllPermissions = grantedPermissions.containsAll(reqReadPermissions + reqWritePermissions)
+            val hasAllPermissions = grantedPermissions.containsAll(reqReadPermissions.keys + reqWritePermissions.keys)
+
+            val grantedPermissionsResult = JSObject().apply {
+                put("read", JSArray(reqReadPermissions.filterKeys { grantedPermissions.contains(it) }.values))
+                put("write", JSArray(reqWritePermissions.filterKeys { grantedPermissions.contains(it) }.values))
+            }
 
             val res = JSObject().apply {
-                put("grantedPermissions", JSArray(grantedPermissions))
+                put("grantedPermissions",  grantedPermissionsResult)
                 put("hasAllPermissions", hasAllPermissions)
             }
             call.resolve(res)

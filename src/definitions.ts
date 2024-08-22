@@ -30,11 +30,11 @@ export interface HealthConnectPlugin {
     nextToken: string;
   }>;
   requestHealthPermissions(options: { read: RecordType[]; write: RecordType[] }): Promise<{
-    grantedPermissions: string[];
+    grantedPermissions: {read: RecordType[], write: RecordType[]};
     hasAllPermissions: boolean;
   }>;
   checkHealthPermissions(options: { read: RecordType[]; write: RecordType[] }): Promise<{
-    grantedPermissions: string[];
+    grantedPermissions: {read: RecordType[], write: RecordType[]};
     hasAllPermissions: boolean;
   }>;
   revokeHealthPermissions(): Promise<void>;
