@@ -195,7 +195,7 @@ export type TimeRangeFilter =
 
 export type HeartRateSample = {
   time: string;
-  beatsPerMinute: numbe;
+  beatsPerMinute: number;
 };
 export type SleepSessionStage = {
   startTime: string;
