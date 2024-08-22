@@ -59,7 +59,7 @@ export type RecordType =
 type RecordBase = {
   metadata: RecordMetadata;
 };
-type StoredRecord = RecordBase & Record;
+export type StoredRecord = RecordBase & Record;
 export type Record =
   | {
       type: 'ActiveCaloriesBurned';
