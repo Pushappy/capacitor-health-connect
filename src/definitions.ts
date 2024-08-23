@@ -48,7 +48,7 @@ export type RecordType =
   | 'BloodGlucose'
   | 'BloodPressure'
   | 'HeartRate'
-  | 'HeartRateVariabilityRmssdRecord'
+  | 'HeartRateVariabilityRmssd'
   | 'Height'
   | 'OxygenSaturation'
   | 'RestingHeartRate'
