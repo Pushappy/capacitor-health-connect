@@ -222,7 +222,7 @@ internal fun Record.toJSONObject(): JSONObject {
                 obj.put("startZoneOffset", this.startZoneOffset?.toJSONValue())
                 obj.put("endTime", this.endTime)
                 obj.put("endZoneOffset", this.endZoneOffset?.toJSONValue())
-                obj.put("samples", this.samples.map { it.toJSONObject() })
+                obj.put("samples", this.samples.map { it.toJSONObject() }.toJSONArray())
             }
             is HeartRateVariabilityRmssdRecord -> {
                 obj.put("time", this.time)
@@ -251,7 +251,7 @@ internal fun Record.toJSONObject(): JSONObject {
                 obj.put("endZoneOffset", this.endZoneOffset?.toJSONValue())
                 obj.put("title", this.title)
                 obj.put("notes", this.notes)
-                obj.put("stages", this.stages.map { it.toJSONObject() })
+                obj.put("stages", this.stages.map { it.toJSONObject() }.toJSONArray())
             }
             is StepsRecord -> {
                 obj.put("startTime", this.startTime)
