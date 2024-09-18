@@ -2,11 +2,14 @@ package com.ubiehealth.capacitor.healthconnect
 
 import android.app.Activity
 import android.content.Intent
+import android.health.connect.datatypes.StepsRecord
 import android.net.Uri
+import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
 import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.lifecycle.lifecycleScope
@@ -65,6 +68,7 @@ class HealthConnectPlugin : Plugin() {
             try {
                 val records = call.getArray("records").toList<JSONObject>().map { it.toRecord() }
                 val result = healthConnectClient.insertRecords(records)
+
 
                 val res = JSObject().apply {
                     put("recordIds", result.recordIdsList)
@@ -125,6 +129,36 @@ class HealthConnectPlugin : Plugin() {
                 call.resolve(res)
             } catch (e: Exception) {
                 call.reject("error reading record", e);
+            }
+        }
+    }
+
+    @PluginMethod
+    fun aggregateGroupByPeriod(call: PluginCall) {
+        this.activity.lifecycleScope.launch {
+            try {
+                val type = call.getString("type").let {
+                    AGGREGATE_TYPE_NAME_MAP[it]
+                            ?: throw IllegalArgumentException("Unexpected AggregateType: $it")
+                }
+
+                val request = AggregateGroupByPeriodRequest(
+                        metrics = setOf(type),
+                        timeRangeFilter = call.data.getLocalTimeRangeFilter("timeRangeFilter"),
+                        dataOriginFilter = call.data.getDataOriginFilter("dataOriginFilter"),
+                        timeRangeSlicer = call.data.getTimeRangeSlicer("timeRangeSlicer"),
+                )
+
+                val result = healthConnectClient.aggregateGroupByPeriod(request)
+
+                val res = JSObject().apply {
+                    val entries = result.map { it.toJSONObject(type) }.toJSONArray()
+                    this.put("entries", entries)
+                }
+
+                call.resolve(res)
+            } catch (e: Exception) {
+                call.reject(e.localizedMessage + ' ' + e.message);
             }
         }
     }

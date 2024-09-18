@@ -1,5 +1,9 @@
 package com.ubiehealth.capacitor.healthconnect
 
+import android.health.connect.datatypes.AggregationType
+import androidx.health.connect.client.aggregate.AggregateMetric
+import androidx.health.connect.client.aggregate.AggregationResult
+import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod
 import androidx.health.connect.client.changes.Change
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
@@ -15,6 +19,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.RuntimeException
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.Period
 import java.time.ZoneOffset
 import kotlin.reflect.KClass
 
@@ -66,6 +72,30 @@ val RECORDS_TYPE_NAME_MAP: Map<String, KClass<out Record>> =
 
 val RECORDS_CLASS_NAME_MAP: Map<KClass<out Record>, String> =
     RECORDS_TYPE_NAME_MAP.entries.associate { it.value to it.key }
+
+val AGGREGATE_TYPE_NAME_MAP: Map<String, AggregateMetric<*>> =
+        //TODO: Nutrition
+        mapOf(
+                "ActiveCaloriesTotal" to ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL,
+                "DistanceTotal" to DistanceRecord.DISTANCE_TOTAL,
+                "ElevationGainedTotal" to ElevationGainedRecord.ELEVATION_GAINED_TOTAL,
+                "FloorsClimbedTotal" to FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL,
+                "HeartBpmAvg" to HeartRateRecord.BPM_AVG,
+                "HeartBpmMin" to HeartRateRecord.BPM_MIN,
+                "HeartBpmMax" to HeartRateRecord.BPM_MAX,
+                "HeartMeasurementsCount" to HeartRateRecord.MEASUREMENTS_COUNT,
+                "HydrationVolumeTotal" to HydrationRecord.VOLUME_TOTAL,
+                "PowerAvg" to PowerRecord.POWER_AVG,
+                "PowerMin" to PowerRecord.POWER_MIN,
+                "PowerMax" to PowerRecord.POWER_MAX,
+                "SleepSessionDurationTotal" to SleepSessionRecord.SLEEP_DURATION_TOTAL,
+                "StepsCountTotal" to StepsRecord.COUNT_TOTAL,
+                "TotalCaloriesBurnedTotal" to TotalCaloriesBurnedRecord.ENERGY_TOTAL,
+                "WheelchairPushesCountTotal" to WheelchairPushesRecord.COUNT_TOTAL,
+        )
+
+val AGGREGATE_METRIC_NAME_MAP: Map<AggregateMetric<*>, String> =
+        AGGREGATE_TYPE_NAME_MAP.entries.associate { it.value to it.key }
 
 internal fun <T> JSONArray.toList(): List<T> {
     return (0 until this.length()).map {
@@ -273,6 +303,20 @@ internal fun Record.toJSONObject(): JSONObject {
             }
             else -> throw IllegalArgumentException("Unexpected record class: $${this::class.qualifiedName}")
         }
+    }
+}
+
+internal fun AggregationResult.toJSONObject(metric: AggregateMetric<*>): JSONObject {
+    return JSONObject().also { obj ->
+        obj.putOpt("count", this.get(metric))
+    }
+}
+internal fun AggregationResultGroupedByPeriod.toJSONObject(metric: AggregateMetric<*>): JSONObject {
+    return JSONObject().also { obj ->
+        obj.put("type", AGGREGATE_METRIC_NAME_MAP[metric])
+        obj.put("startTime", this.startTime)
+        obj.put("endTime", this.endTime)
+        obj.put("result", this.result[metric] ?: 0)
     }
 }
 
@@ -503,6 +547,28 @@ internal fun JSONObject.getTimeRangeFilter(name: String): TimeRangeFilter {
         "after" -> TimeRangeFilter.after(obj.getInstant("time"))
         "between" -> TimeRangeFilter.between(obj.getInstant("startTime"), obj.getInstant("endTime"))
         else -> throw IllegalArgumentException("Unexpected TimeRange type: $type")
+    }
+}
+
+internal fun JSONObject.getLocalTimeRangeFilter(name: String): TimeRangeFilter {
+    val obj = requireNotNull(this.getJSONObject(name))
+    return when (val type = obj.getString("type")) {
+        "before" -> TimeRangeFilter.before(LocalDateTime.parse(obj.getString("time")))
+        "after" -> TimeRangeFilter.after(LocalDateTime.parse(obj.getString("time")))
+        "between" -> TimeRangeFilter.between(obj.getInstant("startTime"), obj.getInstant("endTime"))
+        else -> throw IllegalArgumentException("Unexpected TimeRange type: $type")
+    }
+}
+
+internal fun JSONObject.getTimeRangeSlicer(name: String): Period {
+    val obj = requireNotNull(this.getJSONObject(name))
+
+    return when (val period = obj.getString("period")) {
+        "months" -> Period.ofMonths(obj.getInt("count"))
+        "days" -> Period.ofDays(obj.getInt("count"))
+        "weeks" -> Period.ofWeeks(obj.getInt("count"))
+        "years" -> Period.ofYears(obj.getInt("count"))
+        else -> throw IllegalArgumentException("Unexpected TimeRangePeriod type: $period")
     }
 }
 

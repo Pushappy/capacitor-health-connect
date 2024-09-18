@@ -14,6 +14,7 @@ npx cap sync
 <docgen-index>
 
 * [`checkAvailability()`](#checkavailability)
+* [`ensureInstalled()`](#ensureinstalled)
 * [`insertRecords(...)`](#insertrecords)
 * [`readRecord(...)`](#readrecord)
 * [`readRecords(...)`](#readrecords)
@@ -23,6 +24,7 @@ npx cap sync
 * [`checkHealthPermissions(...)`](#checkhealthpermissions)
 * [`revokeHealthPermissions()`](#revokehealthpermissions)
 * [`openHealthConnectSetting()`](#openhealthconnectsetting)
+* [`aggregateGroupByPeriod(...)`](#aggregategroupbyperiod)
 * [Type Aliases](#type-aliases)
 
 </docgen-index>
@@ -34,6 +36,17 @@ npx cap sync
 
 ```typescript
 checkAvailability() => any
+```
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
+### ensureInstalled()
+
+```typescript
+ensureInstalled() => any
 ```
 
 **Returns:** <code>any</code>
@@ -168,6 +181,21 @@ openHealthConnectSetting() => any
 --------------------
 
 
+### aggregateGroupByPeriod(...)
+
+```typescript
+aggregateGroupByPeriod(options: { type: AggregateType; timeRangeFilter: TimeRangeFilter; timeRangeSlicer: TimeRangeSlicer; dataOriginFilter?: string[]; }) => any
+```
+
+| Param         | Type                                                                                                                                                                                                                        |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ type: <a href="#aggregatetype">AggregateType</a>; timeRangeFilter: <a href="#timerangefilter">TimeRangeFilter</a>; timeRangeSlicer: <a href="#timerangeslicer">TimeRangeSlicer</a>; dataOriginFilter?: {}; }</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
 ### Type Aliases
 
 
@@ -178,7 +206,7 @@ openHealthConnectSetting() => any
 
 #### Record
 
-<code>{ type: 'ActiveCalories'; startTime: Date; startZoneOffset?: string; endTime: Date; endZoneOffset?: string; energy: <a href="#energy">Energy</a>; } | { type: 'BasalBodyTemperature'; time: Date; zoneOffset?: string; temperature: <a href="#temperature">Temperature</a>; measurementLocation: | 'unknown' | 'armpit' | 'finger' | 'forehead' | 'mouth' | 'rectum' | 'temporal_artery' | 'toe' | 'ear' | 'wrist' | 'vagina'; } | { type: 'BasalMetabolicRate'; time: Date; zoneOffset?: string; basalMetabolicRate: <a href="#power">Power</a>; } | { type: '<a href="#bloodglucose">BloodGlucose</a>'; time: Date; zoneOffset?: string; level: <a href="#bloodglucose">BloodGlucose</a>; specimenSource: | 'unknown' | 'interstitial_fluid' | 'capillary_blood' | 'plasma' | 'serum' | 'tears' | 'whole_blood'; mealType: 'unknown' | 'breakfast' | 'lunch' | 'dinner' | 'snack'; relationToMeal: 'unknown' | 'general' | 'fasting' | 'before_meal' | 'after_meal'; } | { type: 'BloodPressure'; time: Date; zoneOffset?: string; systolic: <a href="#pressure">Pressure</a>; diastolic: <a href="#pressure">Pressure</a>; bodyPosition: 'unknown' | 'standing_up' | 'sitting_down' | 'lying_down' | 'reclining'; measurementLocation: 'unknown' | 'left_wrist' | 'right_wrist' | 'left_upper_arm' | 'right_upper_arm'; } | { type: 'Height'; time: Date; zoneOffset?: string; height: <a href="#length">Length</a>; } | { type: 'Weight'; time: Date; zoneOffset?: string; weight: <a href="#mass">Mass</a>; } | { type: 'Steps'; startTime: Date; startZoneOffset?: string; endTime: Date; endZoneOffset?: string; count: number; }</code>
+<code>{ type: 'ActiveCaloriesBurned'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; energy: <a href="#energy">Energy</a>; } | { type: 'BasalBodyTemperature'; time: string; zoneOffset?: string; temperature: <a href="#temperature">Temperature</a>; measurementLocation: | 'unknown' | 'armpit' | 'finger' | 'forehead' | 'mouth' | 'rectum' | 'temporal_artery' | 'toe' | 'ear' | 'wrist' | 'vagina'; } | { type: 'BasalMetabolicRate'; time: string; zoneOffset?: string; basalMetabolicRate: <a href="#power">Power</a>; } | { type: '<a href="#bloodglucose">BloodGlucose</a>'; time: string; zoneOffset?: string; level: <a href="#bloodglucose">BloodGlucose</a>; specimenSource: | 'unknown' | 'interstitial_fluid' | 'capillary_blood' | 'plasma' | 'serum' | 'tears' | 'whole_blood'; mealType: 'unknown' | 'breakfast' | 'lunch' | 'dinner' | 'snack'; relationToMeal: 'unknown' | 'general' | 'fasting' | 'before_meal' | 'after_meal'; } | { type: 'BloodPressure'; time: string; zoneOffset?: string; systolic: <a href="#pressure">Pressure</a>; diastolic: <a href="#pressure">Pressure</a>; bodyPosition: 'unknown' | 'standing_up' | 'sitting_down' | 'lying_down' | 'reclining'; measurementLocation: 'unknown' | 'left_wrist' | 'right_wrist' | 'left_upper_arm' | 'right_upper_arm'; } | { type: 'Height'; time: string; zoneOffset?: string; height: <a href="#length">Length</a>; } | { type: 'HeartRate'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; samples: HeartRateSample[] } | { type: 'HeartRateVariabilityRmssd'; time: string; zoneOffset?: string; heartRateVariabilityMillis: number; } | { type: 'SleepSession'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; title?: string; notes?: string; stages: SleepSessionStage[]; } | { type: 'Steps'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; count: number; } | { type: 'Vo2Max'; time: string; zoneOffset?: string; vo2MillilitersPerMinuteKilogram: number; measurementMethod: 'metabolic_cart' | 'heart_rate_ratio' | 'cooper_test' | 'multistage_fitness_test' | 'rockport_fitness_test' | 'other'; } | { type: 'Weight'; time: string; zoneOffset?: string; weight: <a href="#mass">Mass</a>; }</code>
 
 
 #### Energy
@@ -211,6 +239,16 @@ openHealthConnectSetting() => any
 <code>{ unit: 'meter' | 'kilometer' | 'mile' | 'inch' | 'feet'; value: number; }</code>
 
 
+#### HeartRateSample
+
+<code>{ time: string; beatsPerMinute: number; }</code>
+
+
+#### SleepSessionStage
+
+<code>{ startTime: string; endTime: string; stage: 'awake' | 'sleeping' | 'out_of_bed' | 'light' | 'deep' | 'rem' | 'awake_in_bed' | 'unknown'; }</code>
+
+
 #### Mass
 
 <code>{ unit: 'gram' | 'kilogram' | 'milligram' | 'microgram' | 'ounce' | 'pound'; value: number; }</code>
@@ -218,7 +256,7 @@ openHealthConnectSetting() => any
 
 #### RecordType
 
-<code>'ActiveCalories' | 'BasalBodyTemperature' | 'BasalMetabolicRate' | '<a href="#bloodglucose">BloodGlucose</a>' | 'BloodPressure' | 'Height' | 'Weight' | 'Steps'</code>
+<code>'ActiveCaloriesBurned' | 'BasalBodyTemperature' | 'BasalMetabolicRate' | '<a href="#bloodglucose">BloodGlucose</a>' | 'BloodPressure' | 'HeartRate' | 'HeartRateVariabilityRmssd' | 'Height' | 'OxygenSaturation' | 'RestingHeartRate' | 'SleepSession' | 'Steps' | 'Vo2Max' | 'Weight'</code>
 
 
 #### StoredRecord
@@ -233,16 +271,26 @@ openHealthConnectSetting() => any
 
 #### RecordMetadata
 
-<code>{ id: string; clientRecordId?: string; clientRecordVersion: number; lastModifiedTime: Date; dataOrigin: string; }</code>
+<code>{ id: string; clientRecordId?: string; clientRecordVersion: number; lastModifiedTime: string; dataOrigin: string; }</code>
 
 
 #### TimeRangeFilter
 
-<code>{ type: 'before' | 'after'; time: Date; } | { type: 'between'; startTime: Date; endTime: Date; }</code>
+<code>{ type: 'before' | 'after'; time: string; } | { type: 'between'; startTime: string; endTime: string; }</code>
 
 
 #### Change
 
 <code>{ type: 'Upsert'; record: <a href="#record">Record</a>; } | { type: 'Delete'; recordId: string; }</code>
+
+
+#### AggregateType
+
+<code>'ActiveCaloriesTotal' | 'DistanceTotal' | 'ElevationGainedTotal' | 'FloorsClimbedTotal' | 'HeartBpmAvg' | 'HeartBpmMin' | 'HeartBpmMax' | 'HeartMeasurementsCount' | 'HydrationVolumeTotal' | 'PowerAvg' | 'PowerMin' | 'PowerMax' | 'SleepSessionDurationTotal' | 'StepsCountTotal' | 'TotalCaloriesBurnedTotal' | 'WheelchairPushesCountTotal'</code>
+
+
+#### TimeRangeSlicer
+
+<code>{ period: 'days' | 'months' | 'weeks' | 'years', count: number }</code>
 
 </docgen-api>

@@ -39,9 +39,15 @@ export interface HealthConnectPlugin {
   }>;
   revokeHealthPermissions(): Promise<void>;
   openHealthConnectSetting(): Promise<void>;
+  aggregateGroupByPeriod(options: {
+    type: AggregateType;
+    timeRangeFilter: TimeRangeFilter;
+    timeRangeSlicer: TimeRangeSlicer;
+    dataOriginFilter?: string[];
+  }): Promise<any>;
 }
 export type HealthConnectAvailability = 'Available' | 'NotInstalled' | 'NotSupported';
-export type RecordType = 
+export type RecordType =
   | 'ActiveCaloriesBurned'
   | 'BasalBodyTemperature'
   | 'BasalMetabolicRate'
@@ -176,6 +182,25 @@ export type RecordMetadata = {
   lastModifiedTime: string;
   dataOrigin: string;
 };
+
+export type AggregateType =
+  'ActiveCaloriesTotal' |
+  'DistanceTotal' |
+  'ElevationGainedTotal' |
+  'FloorsClimbedTotal' |
+  'HeartBpmAvg' |
+  'HeartBpmMin' |
+  'HeartBpmMax' |
+  'HeartMeasurementsCount' |
+  'HydrationVolumeTotal' |
+  'PowerAvg' |
+  'PowerMin' |
+  'PowerMax' |
+  'SleepSessionDurationTotal' |
+  'StepsCountTotal' |
+  'TotalCaloriesBurnedTotal' |
+  'WheelchairPushesCountTotal'
+
 export type Change =
   | {
       type: 'Upsert';
@@ -195,6 +220,11 @@ export type TimeRangeFilter =
       startTime: string;
       endTime: string;
     };
+
+export type TimeRangeSlicer = {
+  period: 'days' | 'months' | 'weeks' | 'years',
+  count: number
+}
 
 export type HeartRateSample = {
   time: string;
