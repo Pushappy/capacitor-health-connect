@@ -1,6 +1,6 @@
 {
-  "name": "capacitor-health-connect",
-  "version": "0.6.0",
+  "name": "@pushappy/capacitor-health-connect",
+  "version": "0.7.0",
   "description": "Android Health Connect integration for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -17,6 +17,9 @@
     "type": "git",
     "url": "git+https://github.com/ubie-oss/capacitor-health-connect.git"
   },
+  "publishConfig": {
+    "registry": "https://europe-west1-npm.pkg.dev/pushappy-1285/npm-registry/"
+  },
   "bugs": {
     "url": "https://github.com/ubie-oss/capacitor-health-connect/issues"
   },
@@ -26,6 +29,7 @@
     "native"
   ],
   "scripts": {
+    "ar-login": "npx google-artifactregistry-auth --credential-config=./.npmrc",
     "verify": "npm run verify:android && npm run verify:web",
     "verify:android": "cd android && ./gradlew clean build test && cd ..",
     "verify:web": "npm run build",
