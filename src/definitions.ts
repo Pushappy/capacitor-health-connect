@@ -5,46 +5,34 @@ export interface HealthConnectPlugin {
   ensureInstalled(): Promise<{
     installed: boolean;
   }>;
-  insertRecords(options: { records: Record[] }): Promise<{
+  insertRecords(payload: InsertRecordsPayload): Promise<{
     recordIds: string[];
   }>;
-  readRecord(options: { type: RecordType; recordId: string }): Promise<{
+  readRecord(options: ReadRecordOptions): Promise<{
     record: StoredRecord;
   }>;
-  readRecords(options: {
-    type: RecordType;
-    timeRangeFilter: TimeRangeFilter;
-    dataOriginFilter?: string[];
-    ascendingOrder?: boolean;
-    pageSize?: number;
-    pageToken?: string;
-  }): Promise<{
+  readRecords(options: ReadRecordsOptions): Promise<{
     records: StoredRecord[];
     pageToken?: string;
   }>;
-  getChangesToken(options: { types: RecordType[] }): Promise<{
+  getChangesToken(options: GetChangesTokenOptions): Promise<{
     token: string;
   }>;
-  getChanges(options: { token: string }): Promise<{
+  getChanges(options: GetChangesOptions): Promise<{
     changes: Change[];
     nextToken: string;
   }>;
-  requestHealthPermissions(options: { read: RecordType[]; write: RecordType[] }): Promise<{
-    grantedPermissions: {read: RecordType[], write: RecordType[]};
+  requestHealthPermissions(options: HealthPermissions): Promise<{
+    grantedPermissions: HealthPermissions;
     hasAllPermissions: boolean;
   }>;
-  checkHealthPermissions(options: { read: RecordType[]; write: RecordType[] }): Promise<{
-    grantedPermissions: {read: RecordType[], write: RecordType[]};
+  checkHealthPermissions(options: HealthPermissions): Promise<{
+    grantedPermissions: HealthPermissions;
     hasAllPermissions: boolean;
   }>;
   revokeHealthPermissions(): Promise<void>;
   openHealthConnectSetting(): Promise<void>;
-  aggregateGroupByPeriod(options: {
-    type: AggregateType;
-    timeRangeFilter: TimeRangeFilter;
-    timeRangeSlicer: TimeRangeSlicer;
-    dataOriginFilter?: string[];
-  }): Promise<any>;
+  aggregateGroupByPeriod(options: AggregateGroupByPeriodOptions): Promise<any>;
 }
 export type HealthConnectAvailability = 'Available' | 'NotInstalled' | 'NotSupported';
 export type RecordType =
@@ -62,6 +50,45 @@ export type RecordType =
   | 'Steps'
   | 'Vo2Max'
   | 'Weight';
+
+export type InsertRecordsPayload = {
+  records: Record[];
+};
+
+export type GetChangesTokenOptions = {
+  types: RecordType[];
+};
+
+export type GetChangesOptions = {
+ token: string;
+};
+
+export type HealthPermissions = {
+  read: RecordType[];
+  write: RecordType[];
+};
+
+export type ReadRecordOptions = {
+  type: RecordType;
+  recordId: string;
+};
+
+export type ReadRecordsOptions = {
+  type: RecordType;
+  timeRangeFilter: TimeRangeFilter;
+  dataOriginFilter?: string[];
+  ascendingOrder?: boolean;
+  pageSize?: number;
+  pageToken?: string;
+};
+
+export type AggregateGroupByPeriodOptions = {
+  type: AggregateType;
+  timeRangeFilter: TimeRangeFilter;
+  timeRangeSlicer: TimeRangeSlicer;
+  dataOriginFilter?: string[];
+}
+
 type RecordBase = {
   metadata: RecordMetadata;
 };
