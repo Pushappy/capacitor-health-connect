@@ -25,6 +25,12 @@ npx cap sync
 * [`revokeHealthPermissions()`](#revokehealthpermissions)
 * [`openHealthConnectSetting()`](#openhealthconnectsetting)
 * [`aggregateGroupByPeriod(...)`](#aggregategroupbyperiod)
+* [`aggregateGroupByDuration(...)`](#aggregategroupbyduration)
+* [`aggregate(...)`](#aggregate)
+* [`checkReadHealthDataHistoryPermission()`](#checkreadhealthdatahistorypermission)
+* [`requestReadHealthDataHistoryPermission()`](#requestreadhealthdatahistorypermission)
+* [`checkReadHealthDataInBackgroundPermission()`](#checkreadhealthdatainbackgroundpermission)
+* [`requestReadHealthDataInBackgroundPermission()`](#requestreadhealthdatainbackgroundpermission)
 * [Type Aliases](#type-aliases)
 
 </docgen-index>
@@ -35,10 +41,10 @@ npx cap sync
 ### checkAvailability()
 
 ```typescript
-checkAvailability() => any
+checkAvailability() => Promise<{ availability: HealthConnectAvailability; }>
 ```
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ availability: <a href="#healthconnectavailability">HealthConnectAvailability</a>; }&gt;</code>
 
 --------------------
 
@@ -46,10 +52,10 @@ checkAvailability() => any
 ### ensureInstalled()
 
 ```typescript
-ensureInstalled() => any
+ensureInstalled() => Promise<{ installed: boolean; }>
 ```
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ installed: boolean; }&gt;</code>
 
 --------------------
 
@@ -57,14 +63,14 @@ ensureInstalled() => any
 ### insertRecords(...)
 
 ```typescript
-insertRecords(options: { records: Record[]; }) => any
+insertRecords(payload: InsertRecordsPayload) => Promise<{ recordIds: string[]; }>
 ```
 
-| Param         | Type                          |
-| ------------- | ----------------------------- |
-| **`options`** | <code>{ records: {}; }</code> |
+| Param         | Type                                                                  |
+| ------------- | --------------------------------------------------------------------- |
+| **`payload`** | <code><a href="#insertrecordspayload">InsertRecordsPayload</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ recordIds: string[]; }&gt;</code>
 
 --------------------
 
@@ -72,14 +78,14 @@ insertRecords(options: { records: Record[]; }) => any
 ### readRecord(...)
 
 ```typescript
-readRecord(options: { type: RecordType; recordId: string; }) => any
+readRecord(options: ReadRecordOptions) => Promise<{ record: StoredRecord; }>
 ```
 
-| Param         | Type                                                                           |
-| ------------- | ------------------------------------------------------------------------------ |
-| **`options`** | <code>{ type: <a href="#recordtype">RecordType</a>; recordId: string; }</code> |
+| Param         | Type                                                            |
+| ------------- | --------------------------------------------------------------- |
+| **`options`** | <code><a href="#readrecordoptions">ReadRecordOptions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ record: <a href="#storedrecord">StoredRecord</a>&lt;<a href="#record">Record</a>&gt;; }&gt;</code>
 
 --------------------
 
@@ -87,14 +93,14 @@ readRecord(options: { type: RecordType; recordId: string; }) => any
 ### readRecords(...)
 
 ```typescript
-readRecords(options: { type: RecordType; timeRangeFilter: TimeRangeFilter; dataOriginFilter?: string[]; ascendingOrder?: boolean; pageSize?: number; pageToken?: string; }) => any
+readRecords(options: ReadRecordsOptions) => Promise<{ records: StoredRecord[]; pageToken?: string; }>
 ```
 
-| Param         | Type                                                                                                                                                                                                                  |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`options`** | <code>{ type: <a href="#recordtype">RecordType</a>; timeRangeFilter: <a href="#timerangefilter">TimeRangeFilter</a>; dataOriginFilter?: {}; ascendingOrder?: boolean; pageSize?: number; pageToken?: string; }</code> |
+| Param         | Type                                                              |
+| ------------- | ----------------------------------------------------------------- |
+| **`options`** | <code><a href="#readrecordsoptions">ReadRecordsOptions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ records: <a href="#storedrecord">StoredRecord</a>&lt;<a href="#record">Record</a>&gt;[]; pageToken?: string; }&gt;</code>
 
 --------------------
 
@@ -102,14 +108,14 @@ readRecords(options: { type: RecordType; timeRangeFilter: TimeRangeFilter; dataO
 ### getChangesToken(...)
 
 ```typescript
-getChangesToken(options: { types: RecordType[]; }) => any
+getChangesToken(options: GetChangesTokenOptions) => Promise<{ token: string; }>
 ```
 
-| Param         | Type                        |
-| ------------- | --------------------------- |
-| **`options`** | <code>{ types: {}; }</code> |
+| Param         | Type                                                                      |
+| ------------- | ------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#getchangestokenoptions">GetChangesTokenOptions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ token: string; }&gt;</code>
 
 --------------------
 
@@ -117,14 +123,14 @@ getChangesToken(options: { types: RecordType[]; }) => any
 ### getChanges(...)
 
 ```typescript
-getChanges(options: { token: string; }) => any
+getChanges(options: GetChangesOptions) => Promise<{ changes: Change[]; nextToken: string; }>
 ```
 
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ token: string; }</code> |
+| Param         | Type                                                            |
+| ------------- | --------------------------------------------------------------- |
+| **`options`** | <code><a href="#getchangesoptions">GetChangesOptions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ changes: Change[]; nextToken: string; }&gt;</code>
 
 --------------------
 
@@ -132,14 +138,14 @@ getChanges(options: { token: string; }) => any
 ### requestHealthPermissions(...)
 
 ```typescript
-requestHealthPermissions(options: { read: RecordType[]; write: RecordType[]; }) => any
+requestHealthPermissions(options: HealthPermissions) => Promise<{ grantedPermissions: HealthPermissions; hasAllPermissions: boolean; }>
 ```
 
-| Param         | Type                                  |
-| ------------- | ------------------------------------- |
-| **`options`** | <code>{ read: {}; write: {}; }</code> |
+| Param         | Type                                                            |
+| ------------- | --------------------------------------------------------------- |
+| **`options`** | <code><a href="#healthpermissions">HealthPermissions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ grantedPermissions: <a href="#healthpermissions">HealthPermissions</a>; hasAllPermissions: boolean; }&gt;</code>
 
 --------------------
 
@@ -147,14 +153,14 @@ requestHealthPermissions(options: { read: RecordType[]; write: RecordType[]; }) 
 ### checkHealthPermissions(...)
 
 ```typescript
-checkHealthPermissions(options: { read: RecordType[]; write: RecordType[]; }) => any
+checkHealthPermissions(options: HealthPermissions) => Promise<{ grantedPermissions: HealthPermissions; hasAllPermissions: boolean; }>
 ```
 
-| Param         | Type                                  |
-| ------------- | ------------------------------------- |
-| **`options`** | <code>{ read: {}; write: {}; }</code> |
+| Param         | Type                                                            |
+| ------------- | --------------------------------------------------------------- |
+| **`options`** | <code><a href="#healthpermissions">HealthPermissions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ grantedPermissions: <a href="#healthpermissions">HealthPermissions</a>; hasAllPermissions: boolean; }&gt;</code>
 
 --------------------
 
@@ -162,10 +168,8 @@ checkHealthPermissions(options: { read: RecordType[]; write: RecordType[]; }) =>
 ### revokeHealthPermissions()
 
 ```typescript
-revokeHealthPermissions() => any
+revokeHealthPermissions() => Promise<void>
 ```
-
-**Returns:** <code>any</code>
 
 --------------------
 
@@ -173,10 +177,8 @@ revokeHealthPermissions() => any
 ### openHealthConnectSetting()
 
 ```typescript
-openHealthConnectSetting() => any
+openHealthConnectSetting() => Promise<void>
 ```
-
-**Returns:** <code>any</code>
 
 --------------------
 
@@ -184,14 +186,88 @@ openHealthConnectSetting() => any
 ### aggregateGroupByPeriod(...)
 
 ```typescript
-aggregateGroupByPeriod(options: { type: AggregateType; timeRangeFilter: TimeRangeFilter; timeRangeSlicer: TimeRangeSlicer; dataOriginFilter?: string[]; }) => any
+aggregateGroupByPeriod(options: AggregateGroupByPeriodOptions) => Promise<AggregateByPeriodResult>
 ```
 
-| Param         | Type                                                                                                                                                                                                                        |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`options`** | <code>{ type: <a href="#aggregatetype">AggregateType</a>; timeRangeFilter: <a href="#timerangefilter">TimeRangeFilter</a>; timeRangeSlicer: <a href="#timerangeslicer">TimeRangeSlicer</a>; dataOriginFilter?: {}; }</code> |
+| Param         | Type                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#aggregategroupbyperiodoptions">AggregateGroupByPeriodOptions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;<a href="#aggregatebyperiodresult">AggregateByPeriodResult</a>&gt;</code>
+
+--------------------
+
+
+### aggregateGroupByDuration(...)
+
+```typescript
+aggregateGroupByDuration(options: AggregateGroupByDurationOptions) => Promise<AggregateByPeriodResult>
+```
+
+| Param         | Type                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#aggregategroupbydurationoptions">AggregateGroupByDurationOptions</a></code> |
+
+**Returns:** <code>Promise&lt;<a href="#aggregatebyperiodresult">AggregateByPeriodResult</a>&gt;</code>
+
+--------------------
+
+
+### aggregate(...)
+
+```typescript
+aggregate(options: AggregateOptions) => Promise<AggregateResult>
+```
+
+| Param         | Type                                                          |
+| ------------- | ------------------------------------------------------------- |
+| **`options`** | <code><a href="#aggregateoptions">AggregateOptions</a></code> |
+
+**Returns:** <code>Promise&lt;<a href="#aggregateresult">AggregateResult</a>&gt;</code>
+
+--------------------
+
+
+### checkReadHealthDataHistoryPermission()
+
+```typescript
+checkReadHealthDataHistoryPermission() => Promise<{ hasPermission: boolean; }>
+```
+
+**Returns:** <code>Promise&lt;{ hasPermission: boolean; }&gt;</code>
+
+--------------------
+
+
+### requestReadHealthDataHistoryPermission()
+
+```typescript
+requestReadHealthDataHistoryPermission() => Promise<{ readHealthDataHistoryStatus: ReadHealthDataHistoryPermissionStatus; }>
+```
+
+**Returns:** <code>Promise&lt;{ readHealthDataHistoryStatus: <a href="#readhealthdatahistorypermissionstatus">ReadHealthDataHistoryPermissionStatus</a>; }&gt;</code>
+
+--------------------
+
+
+### checkReadHealthDataInBackgroundPermission()
+
+```typescript
+checkReadHealthDataInBackgroundPermission() => Promise<{ hasPermission: boolean; }>
+```
+
+**Returns:** <code>Promise&lt;{ hasPermission: boolean; }&gt;</code>
+
+--------------------
+
+
+### requestReadHealthDataInBackgroundPermission()
+
+```typescript
+requestReadHealthDataInBackgroundPermission() => Promise<{ readHealthDataInBackgroundStatus: ReadHealthDataHistoryPermissionStatus; }>
+```
+
+**Returns:** <code>Promise&lt;{ readHealthDataInBackgroundStatus: <a href="#readhealthdatahistorypermissionstatus">ReadHealthDataHistoryPermissionStatus</a>; }&gt;</code>
 
 --------------------
 
@@ -204,64 +280,21 @@ aggregateGroupByPeriod(options: { type: AggregateType; timeRangeFilter: TimeRang
 <code>'Available' | 'NotInstalled' | 'NotSupported'</code>
 
 
+#### InsertRecordsPayload
+
+<code>{ records: Record[]; }</code>
+
+
 #### Record
 
-<code>{ type: 'ActiveCaloriesBurned'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; energy: <a href="#energy">Energy</a>; } | { type: 'BasalBodyTemperature'; time: string; zoneOffset?: string; temperature: <a href="#temperature">Temperature</a>; measurementLocation: | 'unknown' | 'armpit' | 'finger' | 'forehead' | 'mouth' | 'rectum' | 'temporal_artery' | 'toe' | 'ear' | 'wrist' | 'vagina'; } | { type: 'BasalMetabolicRate'; time: string; zoneOffset?: string; basalMetabolicRate: <a href="#power">Power</a>; } | { type: '<a href="#bloodglucose">BloodGlucose</a>'; time: string; zoneOffset?: string; level: <a href="#bloodglucose">BloodGlucose</a>; specimenSource: | 'unknown' | 'interstitial_fluid' | 'capillary_blood' | 'plasma' | 'serum' | 'tears' | 'whole_blood'; mealType: 'unknown' | 'breakfast' | 'lunch' | 'dinner' | 'snack'; relationToMeal: 'unknown' | 'general' | 'fasting' | 'before_meal' | 'after_meal'; } | { type: 'BloodPressure'; time: string; zoneOffset?: string; systolic: <a href="#pressure">Pressure</a>; diastolic: <a href="#pressure">Pressure</a>; bodyPosition: 'unknown' | 'standing_up' | 'sitting_down' | 'lying_down' | 'reclining'; measurementLocation: 'unknown' | 'left_wrist' | 'right_wrist' | 'left_upper_arm' | 'right_upper_arm'; } | { type: 'Height'; time: string; zoneOffset?: string; height: <a href="#length">Length</a>; } | { type: 'HeartRate'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; samples: HeartRateSample[] } | { type: 'HeartRateVariabilityRmssd'; time: string; zoneOffset?: string; heartRateVariabilityMillis: number; } | { type: 'SleepSession'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; title?: string; notes?: string; stages: SleepSessionStage[]; } | { type: 'Steps'; startTime: string; startZoneOffset?: string; endTime: string; endZoneOffset?: string; count: number; } | { type: 'Vo2Max'; time: string; zoneOffset?: string; vo2MillilitersPerMinuteKilogram: number; measurementMethod: 'metabolic_cart' | 'heart_rate_ratio' | 'cooper_test' | 'multistage_fitness_test' | 'rockport_fitness_test' | 'other'; } | { type: 'Weight'; time: string; zoneOffset?: string; weight: <a href="#mass">Mass</a>; }</code>
+Construct a type with a set of properties K of type T
 
-
-#### Energy
-
-<code>{ unit: 'calories' | 'kilocalories' | 'joules' | 'kilojoules'; value: number; }</code>
-
-
-#### Temperature
-
-<code>{ unit: 'celsius' | 'fahrenheit'; value: number; }</code>
-
-
-#### Power
-
-<code>{ unit: 'kilocaloriesPerDay' | 'watts'; value: number; }</code>
-
-
-#### BloodGlucose
-
-<code>{ unit: 'milligramsPerDeciliter' | 'millimolesPerLiter'; value: number; }</code>
-
-
-#### Pressure
-
-<code>{ unit: 'millimetersOfMercury'; value: number; }</code>
-
-
-#### Length
-
-<code>{ unit: 'meter' | 'kilometer' | 'mile' | 'inch' | 'feet'; value: number; }</code>
-
-
-#### HeartRateSample
-
-<code>{ time: string; beatsPerMinute: number; }</code>
-
-
-#### SleepSessionStage
-
-<code>{ startTime: string; endTime: string; stage: 'awake' | 'sleeping' | 'out_of_bed' | 'light' | 'deep' | 'rem' | 'awake_in_bed' | 'unknown'; }</code>
-
-
-#### Mass
-
-<code>{ unit: 'gram' | 'kilogram' | 'milligram' | 'microgram' | 'ounce' | 'pound'; value: number; }</code>
-
-
-#### RecordType
-
-<code>'ActiveCaloriesBurned' | 'BasalBodyTemperature' | 'BasalMetabolicRate' | '<a href="#bloodglucose">BloodGlucose</a>' | 'BloodPressure' | 'HeartRate' | 'HeartRateVariabilityRmssd' | 'Height' | 'OxygenSaturation' | 'RestingHeartRate' | 'SleepSession' | 'Steps' | 'Vo2Max' | 'Weight'</code>
+<code>{ [P in K]: T; }</code>
 
 
 #### StoredRecord
 
-<code><a href="#recordbase">RecordBase</a> & <a href="#record">Record</a></code>
+<code><a href="#recordbase">RecordBase</a> & T</code>
 
 
 #### RecordBase
@@ -274,14 +307,64 @@ aggregateGroupByPeriod(options: { type: AggregateType; timeRangeFilter: TimeRang
 <code>{ id: string; clientRecordId?: string; clientRecordVersion: number; lastModifiedTime: string; dataOrigin: string; }</code>
 
 
+#### ReadRecordOptions
+
+<code>{ type: <a href="#recordtype">RecordType</a>; recordId: string; }</code>
+
+
+#### RecordType
+
+<code>'ActiveCaloriesBurned' | 'BasalBodyTemperature' | 'BasalMetabolicRate' | 'BloodGlucose' | 'BloodPressure' | 'HeartRate' | 'HeartRateVariabilityRmssd' | 'Height' | 'OxygenSaturation' | 'RestingHeartRate' | 'SleepSession' | 'Steps' | 'Vo2Max' | 'Weight'</code>
+
+
+#### ReadRecordsOptions
+
+<code>{ type: <a href="#recordtype">RecordType</a>; timeRangeFilter: <a href="#timerangefilter">TimeRangeFilter</a>; dataOriginFilter?: string[]; ascendingOrder?: boolean; pageSize?: number; pageToken?: string; }</code>
+
+
 #### TimeRangeFilter
 
 <code>{ type: 'before' | 'after'; time: string; } | { type: 'between'; startTime: string; endTime: string; }</code>
 
 
+#### GetChangesTokenOptions
+
+<code>{ types: RecordType[]; }</code>
+
+
 #### Change
 
-<code>{ type: 'Upsert'; record: <a href="#record">Record</a>; } | { type: 'Delete'; recordId: string; }</code>
+<code><a href="#upsertchange">UpsertChange</a> | <a href="#deletechange">DeleteChange</a></code>
+
+
+#### UpsertChange
+
+<code>{ type: 'Upsert'; record: <a href="#record">Record</a>; }</code>
+
+
+#### DeleteChange
+
+<code>{ type: 'Delete'; recordId: string; }</code>
+
+
+#### GetChangesOptions
+
+<code>{ token: string; }</code>
+
+
+#### HealthPermissions
+
+<code>{ read: RecordType[]; write: RecordType[]; }</code>
+
+
+#### AggregateByPeriodResult
+
+<code>{ entries: AggregateByPeriodEntry[] }</code>
+
+
+#### AggregateByPeriodEntry
+
+<code>{ type: <a href="#aggregatetype">AggregateType</a>; startTime: string; endTime: string; result: number; }</code>
 
 
 #### AggregateType
@@ -289,8 +372,43 @@ aggregateGroupByPeriod(options: { type: AggregateType; timeRangeFilter: TimeRang
 <code>'ActiveCaloriesTotal' | 'DistanceTotal' | 'ElevationGainedTotal' | 'FloorsClimbedTotal' | 'HeartBpmAvg' | 'HeartBpmMin' | 'HeartBpmMax' | 'HeartMeasurementsCount' | 'HydrationVolumeTotal' | 'PowerAvg' | 'PowerMin' | 'PowerMax' | 'SleepSessionDurationTotal' | 'StepsCountTotal' | 'TotalCaloriesBurnedTotal' | 'WheelchairPushesCountTotal'</code>
 
 
+#### AggregateGroupByPeriodOptions
+
+<code>{ type: <a href="#aggregatetype">AggregateType</a>; timeRangeFilter: <a href="#localtimerangefilter">LocalTimeRangeFilter</a>; timeRangeSlicer: <a href="#timerangeslicer">TimeRangeSlicer</a>; dataOriginFilter?: string[]; }</code>
+
+
+#### LocalTimeRangeFilter
+
+<code>{ type: 'before' | 'after'; localTime: string; } | { type: 'between'; localStartTime: string; localEndTime: string; }</code>
+
+
 #### TimeRangeSlicer
 
 <code>{ period: 'days' | 'months' | 'weeks' | 'years', count: number }</code>
+
+
+#### AggregateGroupByDurationOptions
+
+<code>{ type: <a href="#aggregatetype">AggregateType</a>; timeRangeFilter: <a href="#localtimerangefilter">LocalTimeRangeFilter</a>; timeRangeSlicer: <a href="#durationtimerangeslicer">DurationTimeRangeSlicer</a>; dataOriginFilter?: string[]; }</code>
+
+
+#### DurationTimeRangeSlicer
+
+<code>{ duration: 'days' | 'hours' | 'minutes' | 'seconds' | 'millis'; count: number; }</code>
+
+
+#### AggregateResult
+
+<code>{ type: <a href="#aggregatetype">AggregateType</a>; startTime: string; endTime: string; result: number; }</code>
+
+
+#### AggregateOptions
+
+<code>{ type: <a href="#aggregatetype">AggregateType</a>; timeRangeFilter: <a href="#localtimerangefilter">LocalTimeRangeFilter</a>; dataOriginFilter?: string[]; }</code>
+
+
+#### ReadHealthDataHistoryPermissionStatus
+
+<code>'NotSupported' | 'Granted' | 'Denied'</code>
 
 </docgen-api>

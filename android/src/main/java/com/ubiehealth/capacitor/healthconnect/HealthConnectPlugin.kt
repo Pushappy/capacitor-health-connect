@@ -7,9 +7,13 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.metadata.Metadata
+import androidx.health.connect.client.request.AggregateGroupByDurationRequest
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
+import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.lifecycle.lifecycleScope
@@ -20,10 +24,14 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.time.Duration
+import java.time.LocalTime
 
 @CapacitorPlugin(name = "HealthConnect")
 class HealthConnectPlugin : Plugin() {
@@ -86,11 +94,11 @@ class HealthConnectPlugin : Plugin() {
             try {
                 val type = call.getString("type").let {
                     RECORDS_TYPE_NAME_MAP[it]
-                        ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                            ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 }
 
                 val result = healthConnectClient.readRecord(
-                    recordType = type, recordId = requireNotNull(call.getString("recordId"))
+                        recordType = type, recordId = requireNotNull(call.getString("recordId"))
                 )
 
                 val res = JSObject().apply {
@@ -109,15 +117,15 @@ class HealthConnectPlugin : Plugin() {
             try {
                 val type = call.getString("type").let {
                     RECORDS_TYPE_NAME_MAP[it]
-                        ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                            ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 }
                 val request = ReadRecordsRequest(
-                    recordType = type,
-                    timeRangeFilter = call.data.getTimeRangeFilter("timeRangeFilter"),
-                    dataOriginFilter = call.data.getDataOriginFilter("dataOriginFilter"),
-                    ascendingOrder = call.getBoolean("ascendingOrder") ?: true,
-                    pageSize = call.getInt("pageSize") ?: 1000,
-                    pageToken = call.getString("pageToken"),
+                        recordType = type,
+                        timeRangeFilter = call.data.getLocalTimeRangeFilter("timeRangeFilter"),
+                        dataOriginFilter = call.data.getDataOriginFilter("dataOriginFilter"),
+                        ascendingOrder = call.getBoolean("ascendingOrder") ?: true,
+                        pageSize = call.getInt("pageSize") ?: 1000,
+                        pageToken = call.getString("pageToken"),
                 )
                 val result = healthConnectClient.readRecords(request)
 
@@ -129,6 +137,36 @@ class HealthConnectPlugin : Plugin() {
                 call.resolve(res)
             } catch (e: Exception) {
                 call.reject("error reading record", e);
+            }
+        }
+    }
+
+    @PluginMethod
+    fun aggregateGroupByDuration(call: PluginCall) {
+        this.activity.lifecycleScope.launch {
+            try {
+                val type = call.getString("type").let {
+                    AGGREGATE_TYPE_NAME_MAP[it]
+                        ?: throw IllegalArgumentException("Unexpected AggregateType: $it")
+                }
+
+                val request = AggregateGroupByDurationRequest(
+                    metrics = setOf(type),
+                    timeRangeFilter = call.data.getLocalTimeRangeFilter("timeRangeFilter"),
+                    dataOriginFilter = call.data.getDataOriginFilter("dataOriginFilter"),
+                    timeRangeSlicer = call.data.getDurationTimeSlicer("timeRangeSlicer"),
+                )
+
+                val result = healthConnectClient.aggregateGroupByDuration(request)
+
+                val res = JSObject().apply {
+                    val entries = result.map { it.toJSONObject(type) }.toJSONArray()
+                    this.put("entries", entries)
+                }
+
+                call.resolve(res)
+            } catch (e: Exception) {
+                call.reject(e.localizedMessage + ' ' + e.message);
             }
         }
     }
@@ -164,16 +202,47 @@ class HealthConnectPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun aggregate(call: PluginCall) {
+        this.activity.lifecycleScope.launch {
+            try {
+                val type = call.getString("type").let {
+                    AGGREGATE_TYPE_NAME_MAP[it]
+                        ?: throw IllegalArgumentException("Unexpected AggregateType: $it")
+                }
+                val timeRangeFilter = call.data.getLocalTimeRangeFilter("timeRangeFilter")
+
+                val request = AggregateRequest(
+                    metrics = setOf(type),
+                    timeRangeFilter = timeRangeFilter,
+                    dataOriginFilter = call.data.getDataOriginFilter("dataOriginFilter")
+                )
+
+                val result = healthConnectClient.aggregate(request)
+
+                val res = JSObject().apply {
+                    this.put("type", AGGREGATE_METRIC_NAME_MAP[type])
+                    this.put("startTime", timeRangeFilter.localStartTime.toString())
+                    this.put("endTime", timeRangeFilter.localEndTime.toString())
+                    this.put("result", result[type])
+                }
+                call.resolve(res)
+            } catch (e: Exception) {
+                call.reject(e.localizedMessage + ' ' + e.message);
+            }
+        }
+    }
+
+    @PluginMethod
     fun getChangesToken(call: PluginCall) {
         this.activity.lifecycleScope.launch {
             try {
                 val types = call.getArray("types").toList<String>().map {
                     RECORDS_TYPE_NAME_MAP[it]
-                        ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                            ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 }.toSet()
                 val request = ChangesTokenRequest(
-                    recordTypes = types,
-                    dataOriginFilters = call.data.getDataOriginFilter("dataOriginFilter"),
+                        recordTypes = types,
+                        dataOriginFilters = call.data.getDataOriginFilter("dataOriginFilter"),
                 )
                 val token = healthConnectClient.getChangesToken(request)
 
@@ -197,7 +266,7 @@ class HealthConnectPlugin : Plugin() {
                 val changes = flow {
                     do {
                         val result = healthConnectClient.getChanges(
-                            changesToken = token,
+                                changesToken = token,
                         )
                         emit(result.changes)
                         token = result.nextChangesToken
@@ -220,8 +289,8 @@ class HealthConnectPlugin : Plugin() {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.setPackage("com.android.vending")
         intent.data = Uri.parse("market://details").buildUpon()
-            .appendQueryParameter("id", "com.google.android.apps.healthdata")
-            .appendQueryParameter("url", "healthconnect://onboarding").build()
+                .appendQueryParameter("id", "com.google.android.apps.healthdata")
+                .appendQueryParameter("url", "healthconnect://onboarding").build()
         intent.putExtra("overlay", true)
         intent.putExtra("callerId", context.packageName)
         return intent
@@ -248,19 +317,19 @@ class HealthConnectPlugin : Plugin() {
 
             val readPermissions = call.getArray("read").toList<String>().map {
                 HealthPermission.getReadPermission(
-                    recordType = RECORDS_TYPE_NAME_MAP[it]
-                        ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                        recordType = RECORDS_TYPE_NAME_MAP[it]
+                                ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 )
             }.toSet()
             val writePermissions = call.getArray("write").toList<String>().map {
                 HealthPermission.getWritePermission(
-                    recordType = RECORDS_TYPE_NAME_MAP[it]
-                        ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                        recordType = RECORDS_TYPE_NAME_MAP[it]
+                                ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 )
             }.toSet()
 
             val intent = permissionContract.createIntent(
-                this.context, readPermissions + writePermissions
+                    this.context, readPermissions + writePermissions
             )
 
             startActivityForResult(call, intent, "handleRequestPermission")
@@ -288,30 +357,30 @@ class HealthConnectPlugin : Plugin() {
         try {
             val reqReadPermissions = call.getArray("read").toList<String>().associateBy {
                 HealthPermission.getReadPermission(
-                    recordType = RECORDS_TYPE_NAME_MAP[it]
-                        ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                        recordType = RECORDS_TYPE_NAME_MAP[it]
+                                ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 )
             }
             val reqWritePermissions = call.getArray("write").toList<String>().associateBy {
                 HealthPermission.getWritePermission(
-                    recordType = RECORDS_TYPE_NAME_MAP[it]
-                        ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                        recordType = RECORDS_TYPE_NAME_MAP[it]
+                                ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                 )
             }
 
             val grantedPermissions =
-                permissionContract.parseResult(result.resultCode, result.data).toSet()
+                    permissionContract.parseResult(result.resultCode, result.data).toSet()
             val hasAllPermissions =
-                grantedPermissions.containsAll(reqReadPermissions.keys + reqWritePermissions.keys)
+                    grantedPermissions.containsAll(reqReadPermissions.keys + reqWritePermissions.keys)
 
             val grantedPermissionsResult = JSObject().apply {
                 put(
-                    "read",
-                    JSArray(reqReadPermissions.filterKeys { grantedPermissions.contains(it) }.values)
+                        "read",
+                        JSArray(reqReadPermissions.filterKeys { grantedPermissions.contains(it) }.values)
                 )
                 put(
-                    "write",
-                    JSArray(reqWritePermissions.filterKeys { grantedPermissions.contains(it) }.values)
+                        "write",
+                        JSArray(reqWritePermissions.filterKeys { grantedPermissions.contains(it) }.values)
                 )
             }
 
@@ -331,30 +400,30 @@ class HealthConnectPlugin : Plugin() {
             try {
                 val reqReadPermissions = call.getArray("read").toList<String>().associateBy {
                     HealthPermission.getReadPermission(
-                        recordType = RECORDS_TYPE_NAME_MAP[it]
-                            ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                            recordType = RECORDS_TYPE_NAME_MAP[it]
+                                    ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                     )
                 }
                 val reqWritePermissions = call.getArray("write").toList<String>().associateBy {
                     HealthPermission.getWritePermission(
-                        recordType = RECORDS_TYPE_NAME_MAP[it]
-                            ?: throw IllegalArgumentException("Unexpected RecordType: $it")
+                            recordType = RECORDS_TYPE_NAME_MAP[it]
+                                    ?: throw IllegalArgumentException("Unexpected RecordType: $it")
                     )
                 }
 
                 val grantedPermissions =
-                    healthConnectClient.permissionController.getGrantedPermissions()
+                        healthConnectClient.permissionController.getGrantedPermissions()
                 val hasAllPermissions =
-                    grantedPermissions.containsAll(reqReadPermissions.keys + reqWritePermissions.keys)
+                        grantedPermissions.containsAll(reqReadPermissions.keys + reqWritePermissions.keys)
 
                 val grantedPermissionsResult = JSObject().apply {
                     put(
-                        "read",
-                        JSArray(reqReadPermissions.filterKeys { grantedPermissions.contains(it) }.values)
+                            "read",
+                            JSArray(reqReadPermissions.filterKeys { grantedPermissions.contains(it) }.values)
                     )
                     put(
-                        "write",
-                        JSArray(reqWritePermissions.filterKeys { grantedPermissions.contains(it) }.values)
+                            "write",
+                            JSArray(reqWritePermissions.filterKeys { grantedPermissions.contains(it) }.values)
                     )
                 }
 
@@ -388,5 +457,118 @@ class HealthConnectPlugin : Plugin() {
         this.context.startActivity(intent)
 
         call.resolve()
+    }
+
+    private fun checkHealthPermission(call: PluginCall, permission: String) {
+        this.activity.lifecycleScope.launch {
+            try {
+                val grantedPermissions = healthConnectClient.permissionController.getGrantedPermissions()
+                val hasPermission = grantedPermissions.contains(permission)
+                val res = JSObject().apply {
+                    put("hasPermission", hasPermission)
+                }
+                call.resolve(res)
+            } catch (e: Exception) {
+                call.reject("error checking permission $permission", e)
+            }
+        }
+    }
+
+    @PluginMethod
+    fun checkReadHealthDataHistoryPermission(call: PluginCall) {
+        return this.checkHealthPermission(call, HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY)
+    }
+
+    @PluginMethod
+    fun checkReadHealthDataInBackgroundPermission(call: PluginCall) {
+        return this.checkHealthPermission(call, HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND)
+    }
+
+    private fun requestHealthPermission(
+        call: PluginCall,
+        feature: Int,
+        permission: String,
+        resultPropertyName: String,
+        callbackName: String
+    ) {
+        if (healthConnectClient.features.getFeatureStatus(feature) != HealthConnectFeatures.FEATURE_STATUS_AVAILABLE) {
+            val res = JSObject().apply {
+                put(resultPropertyName, "NotSupported")
+            }
+            call.resolve(res)
+        }
+
+        val requiredPermissions = setOf(permission)
+        val intent = permissionContract.createIntent(this.context, requiredPermissions)
+
+        startActivityForResult(call, intent, callbackName)
+    }
+
+    private fun handleRequestHealthPermissionResult(
+        call: PluginCall,
+        result: ActivityResult,
+        requestedPermission: String,
+        resultPropertyName: String
+    ) {
+        try {
+            val grantedPermissions = permissionContract.parseResult(result.resultCode, result.data).toSet()
+
+            if (requestedPermission in grantedPermissions) {
+                val res = JSObject().apply {
+                    put(resultPropertyName, "Granted")
+                }
+                call.resolve(res)
+            } else {
+                val res = JSObject().apply {
+                    put(resultPropertyName, "Denied")
+                }
+                call.resolve(res)
+            }
+        } catch (e: Exception) {
+            call.reject("error requesting permission $requestedPermission", e)
+        }
+    }
+
+    @PluginMethod
+    fun requestReadHealthDataHistoryPermission(call: PluginCall) {
+
+        return this.requestHealthPermission(
+            call,
+            HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY,
+            HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY,
+            "readHealthDataHistoryStatus",
+            "handleReadHealthDataHistoryPermissionResult"
+            )
+    }
+
+    @ActivityCallback
+    private fun handleReadHealthDataHistoryPermissionResult(call: PluginCall, result: ActivityResult) {
+        return this.handleRequestHealthPermissionResult(
+            call,
+            result,
+            HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY,
+            "readHealthDataHistoryStatus",
+        )
+    }
+
+    @PluginMethod
+    fun requestReadHealthDataInBackgroundPermission(call: PluginCall) {
+        return this.requestHealthPermission(
+            call,
+            HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_IN_BACKGROUND,
+            HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND,
+            "readHealthDataInBackgroundStatus",
+            "handleReadHealthDataInBackgroundPermissionResult"
+        )
+    }
+
+    @ActivityCallback
+    private fun handleReadHealthDataInBackgroundPermissionResult(call: PluginCall, result: ActivityResult) {
+        return this.handleRequestHealthPermissionResult(
+            call,
+            result,
+            HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND,
+            "readHealthDataInBackgroundStatus",
+        )
     }
 }

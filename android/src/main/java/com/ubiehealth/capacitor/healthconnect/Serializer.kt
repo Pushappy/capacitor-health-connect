@@ -1,8 +1,10 @@
 package com.ubiehealth.capacitor.healthconnect
 
+import android.health.connect.LocalTimeRangeFilter
 import android.health.connect.datatypes.AggregationType
 import androidx.health.connect.client.aggregate.AggregateMetric
 import androidx.health.connect.client.aggregate.AggregationResult
+import androidx.health.connect.client.aggregate.AggregationResultGroupedByDuration
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod
 import androidx.health.connect.client.changes.Change
 import androidx.health.connect.client.changes.DeletionChange
@@ -18,6 +20,7 @@ import com.getcapacitor.JSObject
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.RuntimeException
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.Period
@@ -59,7 +62,6 @@ val RECORDS_TYPE_NAME_MAP: Map<String, KClass<out Record>> =
         "RestingHeartRate" to RestingHeartRateRecord::class,
         "SexualActivity" to SexualActivityRecord::class,
         "SleepSession" to SleepSessionRecord::class,
-        "SleepStage" to SleepStageRecord::class,
         "Speed" to SpeedRecord::class,
         "IntermenstrualBleeding" to IntermenstrualBleedingRecord::class,
         "Steps" to StepsRecord::class,
@@ -116,17 +118,20 @@ internal fun JSONObject.toRecord(): Record {
             endTime = this.getInstant("endTime"),
             endZoneOffset = this.getZoneOffsetOrNull("endZoneOffset"),
             energy = this.getEnergy("energy"),
+                metadata = Metadata.manualEntry()
         )
         "BasalBodyTemperature" -> BasalBodyTemperatureRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
             temperature = this.getTemperature("temperature"),
             measurementLocation = this.getBodyTemperatureMeasurementLocationInt("measurementLocation"),
+                metadata = Metadata.manualEntry()
         )
         "BasalMetabolicRate" -> BasalMetabolicRateRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
             basalMetabolicRate = this.getPower("basalMetabolicRate"),
+                metadata = Metadata.manualEntry()
         )
         "BloodGlucose" -> BloodGlucoseRecord(
             time = this.getInstant("time"),
@@ -138,6 +143,7 @@ internal fun JSONObject.toRecord(): Record {
                 .getOrDefault(this.getString("mealType"), MealType.MEAL_TYPE_UNKNOWN),
             relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_STRING_TO_INT_MAP
                 .getOrDefault(this.getString("relationToMeal"), BloodGlucoseRecord.RELATION_TO_MEAL_UNKNOWN),
+                metadata = Metadata.manualEntry()
         )
         "BloodPressure" -> BloodPressureRecord(
             time = this.getInstant("time"),
@@ -148,33 +154,40 @@ internal fun JSONObject.toRecord(): Record {
                 .getOrDefault(this.getString("bodyPosition"), BloodPressureRecord.BODY_POSITION_UNKNOWN),
             measurementLocation = BloodPressureRecord.MEASUREMENT_LOCATION_STRING_TO_INT_MAP
                 .getOrDefault(this.getString("measurementLocation"), BloodPressureRecord.MEASUREMENT_LOCATION_UNKNOWN),
+                metadata = Metadata.manualEntry()
         )
         "HeartRate" -> HeartRateRecord(
             startTime = this.getInstant("startTime"),
             startZoneOffset = this.getZoneOffsetOrNull("startZoneOffset"),
             endTime = this.getInstant("endTime"),
             endZoneOffset = this.getZoneOffsetOrNull("endZoneOffset"),
-            samples = this.getJSONArray("samples").toList<JSONObject>().map { it.getHearRateRecordSample() }
+            samples = this.getJSONArray("samples").toList<JSONObject>().map { it.getHearRateRecordSample() },
+                metadata = Metadata.manualEntry()
+
         )
         "HeartRateVariabilityRmssd" -> HeartRateVariabilityRmssdRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
-            heartRateVariabilityMillis = this.getDouble("heartRateVariabilityMillis")
+            heartRateVariabilityMillis = this.getDouble("heartRateVariabilityMillis"),
+                metadata = Metadata.manualEntry()
         )
         "Height" -> HeightRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
             height = this.getLength("height"),
+                metadata = Metadata.manualEntry()
         )
         "OxygenSaturation" -> OxygenSaturationRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
-            percentage = Percentage(this.getDouble("percentage"))
+            percentage = Percentage(this.getDouble("percentage")),
+                metadata = Metadata.manualEntry()
         )
         "RestingHeartRate" -> RestingHeartRateRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
-            beatsPerMinute = this.getLong("beatsPerMinute")
+            beatsPerMinute = this.getLong("beatsPerMinute"),
+                metadata = Metadata.manualEntry()
         )
         "SleepSession" -> SleepSessionRecord(
             startTime = this.getInstant("startTime"),
@@ -183,7 +196,8 @@ internal fun JSONObject.toRecord(): Record {
             endZoneOffset = this.getZoneOffsetOrNull("endZoneOffset"),
             title = this.getStringOrNull("title"),
             notes = this.getStringOrNull("notes"),
-            stages = this.getJSONArray("stages").toList<JSONObject>().map { it.getSleepSessionRecordStage() }
+            stages = this.getJSONArray("stages").toList<JSONObject>().map { it.getSleepSessionRecordStage() },
+                metadata = Metadata.manualEntry()
         )
         "Steps" -> StepsRecord(
             startTime = this.getInstant("startTime"),
@@ -191,17 +205,20 @@ internal fun JSONObject.toRecord(): Record {
             endTime = this.getInstant("endTime"),
             endZoneOffset = this.getZoneOffsetOrNull("endZoneOffset"),
             count = this.getLong("count"),
+                metadata = Metadata.manualEntry()
         )
         "Vo2Max" -> Vo2MaxRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
             vo2MillilitersPerMinuteKilogram = this.getDouble("vo2MillilitersPerMinuteKilogram"),
-            measurementMethod = Vo2MaxRecord.MEASUREMENT_METHOD_STRING_TO_INT_MAP.getOrDefault(this.getString("measurementMethod"), Vo2MaxRecord.MEASUREMENT_METHOD_OTHER)
+            measurementMethod = Vo2MaxRecord.MEASUREMENT_METHOD_STRING_TO_INT_MAP.getOrDefault(this.getString("measurementMethod"), Vo2MaxRecord.MEASUREMENT_METHOD_OTHER),
+                metadata = Metadata.manualEntry()
         )
         "Weight" -> WeightRecord(
             time = this.getInstant("time"),
             zoneOffset = this.getZoneOffsetOrNull("zoneOffset"),
             weight = this.getMass("weight"),
+                metadata = Metadata.manualEntry()
         )
         else -> throw IllegalArgumentException("Unexpected record type: $type")
     }
@@ -311,6 +328,16 @@ internal fun AggregationResult.toJSONObject(metric: AggregateMetric<*>): JSONObj
         obj.putOpt("count", this.get(metric))
     }
 }
+
+internal fun AggregationResultGroupedByDuration.toJSONObject(metric: AggregateMetric<*>): JSONObject {
+    return JSONObject().also { obj ->
+        obj.put("type", AGGREGATE_METRIC_NAME_MAP[metric])
+        obj.put("startTime", this.startTime)
+        obj.put("endTime", this.endTime)
+        obj.put("result", this.result[metric] ?: 0)
+    }
+}
+
 internal fun AggregationResultGroupedByPeriod.toJSONObject(metric: AggregateMetric<*>): JSONObject {
     return JSONObject().also { obj ->
         obj.put("type", AGGREGATE_METRIC_NAME_MAP[metric])
@@ -325,6 +352,7 @@ internal fun Metadata.toJSONObject(): JSONObject {
         obj.put("id", this.id)
         obj.put("clientRecordId", this.clientRecordId)
         obj.put("clientRecordVersion", this.clientRecordVersion)
+        obj.put("recordingMethod", this.recordingMethod)
         obj.put("lastModifiedTime", this.lastModifiedTime)
         obj.put("dataOrigin", this.dataOrigin.packageName)
     }
@@ -395,6 +423,10 @@ internal fun JSONObject.getSleepSessionRecordStage(): SleepSessionRecord.Stage {
     val endTime = this.getInstant("endTime")
     val stage = SleepSessionRecord.STAGE_TYPE_STRING_TO_INT_MAP.getOrDefault(this.getString("stage"), SleepSessionRecord.STAGE_TYPE_UNKNOWN)
     return SleepSessionRecord.Stage(starTime,endTime, stage)
+}
+
+internal fun JSONObject.getMetadata(): Metadata {
+    return Metadata.manualEntry()
 }
 
 internal fun JSONObject.getLength(name: String): Length {
@@ -553,9 +585,9 @@ internal fun JSONObject.getTimeRangeFilter(name: String): TimeRangeFilter {
 internal fun JSONObject.getLocalTimeRangeFilter(name: String): TimeRangeFilter {
     val obj = requireNotNull(this.getJSONObject(name))
     return when (val type = obj.getString("type")) {
-        "before" -> TimeRangeFilter.before(LocalDateTime.parse(obj.getString("time")))
-        "after" -> TimeRangeFilter.after(LocalDateTime.parse(obj.getString("time")))
-        "between" -> TimeRangeFilter.between(obj.getInstant("startTime"), obj.getInstant("endTime"))
+        "before" -> TimeRangeFilter.before(LocalDateTime.parse(obj.getString("localTime")))
+        "after" -> TimeRangeFilter.after(LocalDateTime.parse(obj.getString("localTime")))
+        "between" -> TimeRangeFilter.between(LocalDateTime.parse(obj.getString("localStartTime")), LocalDateTime.parse(obj.getString("localEndTime")))
         else -> throw IllegalArgumentException("Unexpected TimeRange type: $type")
     }
 }
@@ -569,6 +601,19 @@ internal fun JSONObject.getTimeRangeSlicer(name: String): Period {
         "weeks" -> Period.ofWeeks(obj.getInt("count"))
         "years" -> Period.ofYears(obj.getInt("count"))
         else -> throw IllegalArgumentException("Unexpected TimeRangePeriod type: $period")
+    }
+}
+
+internal fun JSONObject.getDurationTimeSlicer(name: String): Duration {
+    val obj = requireNotNull(this.getJSONObject(name))
+
+    return when (val duration = obj.getString("duration")) {
+        "days" -> Duration.ofDays(obj.getLong("count"))
+        "hours" -> Duration.ofHours(obj.getLong("count"))
+        "minutes" -> Duration.ofMinutes(obj.getLong("count"))
+        "seconds" -> Duration.ofSeconds(obj.getLong("count"))
+        "millis" -> Duration.ofMillis(obj.getLong("count"))
+        else -> throw IllegalArgumentException("Unexpected TimeRangePeriod type: $duration")
     }
 }
 
