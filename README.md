@@ -324,7 +324,7 @@ Construct a type with a set of properties K of type T
 
 #### TimeRangeFilter
 
-<code>{ type: 'before' | 'after'; time: string; } | { type: 'between'; startTime: string; endTime: string; }</code>
+<code>{ type: 'before' | 'after'; timeUTC: string; } | { type: 'between'; startTimeUTC: string; endTimeUTC: string; }</code>
 
 
 #### GetChangesTokenOptions
@@ -389,7 +389,7 @@ Construct a type with a set of properties K of type T
 
 #### AggregateGroupByDurationOptions
 
-<code>{ type: <a href="#aggregatetype">AggregateType</a>; timeRangeFilter: <a href="#localtimerangefilter">LocalTimeRangeFilter</a>; timeRangeSlicer: <a href="#durationtimerangeslicer">DurationTimeRangeSlicer</a>; dataOriginFilter?: string[]; }</code>
+<code>{ type: <a href="#aggregatetype">AggregateType</a>; timeRangeFilter: <a href="#timerangefilter">TimeRangeFilter</a>; durationTimeRangeSlicer: <a href="#durationtimerangeslicer">DurationTimeRangeSlicer</a>; dataOriginFilter?: string[]; }</code>
 
 
 #### DurationTimeRangeSlicer

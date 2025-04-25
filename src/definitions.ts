@@ -106,8 +106,8 @@ export type AggregateGroupByPeriodOptions = {
 
 export type AggregateGroupByDurationOptions = {
   type: AggregateType;
-  timeRangeFilter: LocalTimeRangeFilter;
-  timeRangeSlicer: DurationTimeRangeSlicer;
+  timeRangeFilter: TimeRangeFilter;
+  durationTimeRangeSlicer: DurationTimeRangeSlicer;
   dataOriginFilter?: string[];
 }
 
@@ -296,16 +296,6 @@ export type DeleteChange = {
 export type Change = UpsertChange
 | DeleteChange
 
-export type TimeRangeFilter =
-  | {
-      type: 'before' | 'after';
-      time: string;
-    }
-  | {
-      type: 'between';
-      startTime: string;
-      endTime: string;
-    };
 
 export type LocalTimeRangeFilter =
   | {
@@ -316,6 +306,17 @@ export type LocalTimeRangeFilter =
       type: 'between';
       localStartTime: string;
       localEndTime: string;
+    };
+
+export type TimeRangeFilter =
+  | {
+      type: 'before' | 'after';
+      timeUTC: string;
+    }
+  | {
+      type: 'between';
+      startTimeUTC: string;
+      endTimeUTC: string;
     };
 
 export type TimeRangeSlicer = {

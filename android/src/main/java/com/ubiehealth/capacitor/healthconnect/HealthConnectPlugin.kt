@@ -152,9 +152,9 @@ class HealthConnectPlugin : Plugin() {
 
                 val request = AggregateGroupByDurationRequest(
                     metrics = setOf(type),
-                    timeRangeFilter = call.data.getLocalTimeRangeFilter("timeRangeFilter"),
+                    timeRangeFilter = call.data.getTimeRangeFilter("timeRangeFilter"),
                     dataOriginFilter = call.data.getDataOriginFilter("dataOriginFilter"),
-                    timeRangeSlicer = call.data.getDurationTimeSlicer("timeRangeSlicer"),
+                    timeRangeSlicer = call.data.getDurationTimeSlicer("durationTimeRangeSlicer"),
                 )
 
                 val result = healthConnectClient.aggregateGroupByDuration(request)

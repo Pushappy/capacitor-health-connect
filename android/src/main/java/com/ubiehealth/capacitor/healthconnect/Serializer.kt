@@ -575,9 +575,9 @@ internal fun JSONObject.getPressure(name: String): Pressure {
 internal fun JSONObject.getTimeRangeFilter(name: String): TimeRangeFilter {
     val obj = requireNotNull(this.getJSONObject(name))
     return when (val type = obj.getString("type")) {
-        "before" -> TimeRangeFilter.before(obj.getInstant("time"))
-        "after" -> TimeRangeFilter.after(obj.getInstant("time"))
-        "between" -> TimeRangeFilter.between(obj.getInstant("startTime"), obj.getInstant("endTime"))
+        "before" -> TimeRangeFilter.before(obj.getInstant("timeUTC"))
+        "after" -> TimeRangeFilter.after(obj.getInstant("timeUTC"))
+        "between" -> TimeRangeFilter.between(obj.getInstant("startTimeUTC"), obj.getInstant("endTimeUTC"))
         else -> throw IllegalArgumentException("Unexpected TimeRange type: $type")
     }
 }
