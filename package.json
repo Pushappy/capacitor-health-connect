@@ -68,5 +68,8 @@
     "android": {
       "src": "android"
     }
+  },
+  "dependencies": {
+    "@capacitor/cli": "^6.2.1"
   }
 }
