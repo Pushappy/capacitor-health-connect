@@ -47,6 +47,8 @@ export interface HealthConnectPlugin {
   requestReadHealthDataInBackgroundPermission(): Promise<{
     readHealthDataInBackgroundStatus: ReadHealthDataHistoryPermissionStatus
   }>;
+  openPlayStore(): Promise<void>;
+  openHealthConnectSettings(): Promise<void>;
 }
 export type HealthConnectAvailability = 'Available' | 'NotInstalled' | 'NotSupported';
 export type RecordType =

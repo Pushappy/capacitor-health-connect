@@ -31,6 +31,8 @@ npx cap sync
 * [`requestReadHealthDataHistoryPermission()`](#requestreadhealthdatahistorypermission)
 * [`checkReadHealthDataInBackgroundPermission()`](#checkreadhealthdatainbackgroundpermission)
 * [`requestReadHealthDataInBackgroundPermission()`](#requestreadhealthdatainbackgroundpermission)
+* [`openPlayStore()`](#openplaystore)
+* [`openHealthConnectSettings()`](#openhealthconnectsettings)
 * [Type Aliases](#type-aliases)
 
 </docgen-index>
@@ -268,6 +270,24 @@ requestReadHealthDataInBackgroundPermission() => Promise<{ readHealthDataInBackg
 ```
 
 **Returns:** <code>Promise&lt;{ readHealthDataInBackgroundStatus: <a href="#readhealthdatahistorypermissionstatus">ReadHealthDataHistoryPermissionStatus</a>; }&gt;</code>
+
+--------------------
+
+
+### openPlayStore()
+
+```typescript
+openPlayStore() => Promise<void>
+```
+
+--------------------
+
+
+### openHealthConnectSettings()
+
+```typescript
+openHealthConnectSettings() => Promise<void>
+```
 
 --------------------
 
