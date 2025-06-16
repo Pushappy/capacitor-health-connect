@@ -1,6 +1,6 @@
 {
   "name": "@pushappy/capacitor-health-connect",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Android Health Connect integration for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
