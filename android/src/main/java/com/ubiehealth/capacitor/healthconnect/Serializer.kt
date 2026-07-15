@@ -385,6 +385,10 @@ internal fun JSONObject.getInstant(name: String): Instant {
     return Instant.parse(this.getString(name))
 }
 
+internal fun JSONObject.getLocalDateTime(name: String): LocalDateTime {
+    return LocalDateTime.ofInstant(Instant.parse(this.getString(name)), ZoneOffset.UTC)
+}
+
 internal fun JSONObject.getZoneOffsetOrNull(name: String): ZoneOffset? {
     return if (!this.isNull(name))
         ZoneOffset.of(this.getString(name))
@@ -585,9 +589,9 @@ internal fun JSONObject.getTimeRangeFilter(name: String): TimeRangeFilter {
 internal fun JSONObject.getLocalTimeRangeFilter(name: String): TimeRangeFilter {
     val obj = requireNotNull(this.getJSONObject(name))
     return when (val type = obj.getString("type")) {
-        "before" -> TimeRangeFilter.before(LocalDateTime.parse(obj.getString("localTime")))
-        "after" -> TimeRangeFilter.after(LocalDateTime.parse(obj.getString("localTime")))
-        "between" -> TimeRangeFilter.between(LocalDateTime.parse(obj.getString("localStartTime")), LocalDateTime.parse(obj.getString("localEndTime")))
+        "before" -> TimeRangeFilter.before(obj.getLocalDateTime("localTime"))
+        "after" -> TimeRangeFilter.after(obj.getLocalDateTime("localTime"))
+        "between" -> TimeRangeFilter.between(obj.getLocalDateTime("localStartTime"), obj.getLocalDateTime("localEndTime"))
         else -> throw IllegalArgumentException("Unexpected TimeRange type: $type")
     }
 }
