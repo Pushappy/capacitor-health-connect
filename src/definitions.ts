@@ -36,16 +36,16 @@ export interface HealthConnectPlugin {
   aggregateGroupByDuration(options: AggregateGroupByDurationOptions): Promise<AggregateByPeriodResult>;
   aggregate(options: AggregateOptions): Promise<AggregateResult>;
   checkReadHealthDataHistoryPermission(): Promise<{
-    hasPermission: boolean
+    hasPermission: boolean;
   }>;
   requestReadHealthDataHistoryPermission(): Promise<{
-    readHealthDataHistoryStatus: ReadHealthDataHistoryPermissionStatus
+    readHealthDataHistoryStatus: ReadHealthDataHistoryPermissionStatus;
   }>;
   checkReadHealthDataInBackgroundPermission(): Promise<{
-    hasPermission: boolean
+    hasPermission: boolean;
   }>;
   requestReadHealthDataInBackgroundPermission(): Promise<{
-    readHealthDataInBackgroundStatus: ReadHealthDataHistoryPermissionStatus
+    readHealthDataInBackgroundStatus: ReadHealthDataHistoryPermissionStatus;
   }>;
   openPlayStore(): Promise<void>;
   openHealthConnectSettings(): Promise<void>;
@@ -67,7 +67,6 @@ export type RecordType =
   | 'Vo2Max'
   | 'Weight';
 
-
 export type InsertRecordsPayload = {
   records: Record[];
 };
@@ -77,7 +76,7 @@ export type GetChangesTokenOptions = {
 };
 
 export type GetChangesOptions = {
- token: string;
+  token: string;
 };
 
 export type HealthPermissions = {
@@ -104,20 +103,20 @@ export type AggregateGroupByPeriodOptions = {
   timeRangeFilter: LocalTimeRangeFilter;
   timeRangeSlicer: TimeRangeSlicer;
   dataOriginFilter?: string[];
-}
+};
 
 export type AggregateGroupByDurationOptions = {
   type: AggregateType;
   timeRangeFilter: TimeRangeFilter;
   durationTimeRangeSlicer: DurationTimeRangeSlicer;
   dataOriginFilter?: string[];
-}
+};
 
 export type AggregateOptions = {
   type: AggregateType;
   timeRangeFilter: LocalTimeRangeFilter;
   dataOriginFilter?: string[];
-}
+};
 
 type RecordBase = {
   metadata: RecordMetadata;
@@ -268,36 +267,34 @@ export type RecordMetadata = {
 };
 
 export type AggregateType =
-  'ActiveCaloriesTotal' |
-  'DistanceTotal' |
-  'ElevationGainedTotal' |
-  'FloorsClimbedTotal' |
-  'HeartBpmAvg' |
-  'HeartBpmMin' |
-  'HeartBpmMax' |
-  'HeartMeasurementsCount' |
-  'HydrationVolumeTotal' |
-  'PowerAvg' |
-  'PowerMin' |
-  'PowerMax' |
-  'SleepSessionDurationTotal' |
-  'StepsCountTotal' |
-  'TotalCaloriesBurnedTotal' |
-  'WheelchairPushesCountTotal';
+  | 'ActiveCaloriesTotal'
+  | 'DistanceTotal'
+  | 'ElevationGainedTotal'
+  | 'FloorsClimbedTotal'
+  | 'HeartBpmAvg'
+  | 'HeartBpmMin'
+  | 'HeartBpmMax'
+  | 'HeartMeasurementsCount'
+  | 'HydrationVolumeTotal'
+  | 'PowerAvg'
+  | 'PowerMin'
+  | 'PowerMax'
+  | 'SleepSessionDurationTotal'
+  | 'StepsCountTotal'
+  | 'TotalCaloriesBurnedTotal'
+  | 'WheelchairPushesCountTotal';
 
 export type UpsertChange = {
   type: 'Upsert';
   record: Record;
-}
+};
 
 export type DeleteChange = {
   type: 'Delete';
   recordId: string;
-}
+};
 
-export type Change = UpsertChange
-| DeleteChange
-
+export type Change = UpsertChange | DeleteChange;
 
 /**
  * Filters records by their own local (zone-agnostic) wall-clock time, e.g. for calendar-day bucketing
@@ -335,14 +332,14 @@ export type TimeRangeFilter =
     };
 
 export type TimeRangeSlicer = {
-  period: 'days' | 'months' | 'weeks' | 'years',
-  count: number
-}
+  period: 'days' | 'months' | 'weeks' | 'years';
+  count: number;
+};
 
 export type DurationTimeRangeSlicer = {
   duration: 'days' | 'hours' | 'minutes' | 'seconds' | 'millis';
   count: number;
-}
+};
 
 export type HeartRateSample = {
   time: string;
@@ -385,21 +382,21 @@ export type BloodGlucose = {
 export type ReadHealthDataHistoryPermissionStatus = 'NotSupported' | 'Granted' | 'Denied';
 
 export type AggregateByPeriodResult = {
-  entries: AggregateByPeriodEntry[]
-}
+  entries: AggregateByPeriodEntry[];
+};
 
 export type AggregateByPeriodEntry = {
   type: AggregateType;
   startTime: string;
   endTime: string;
   result: number;
-}
+};
 
 export type AggregateResult = {
   type: AggregateType;
   startTime: string;
   endTime: string;
   result: number;
-}
+};
 
 export {};
