@@ -299,15 +299,28 @@ export type Change = UpsertChange
 | DeleteChange
 
 
+/**
+ * Filters records by their own local (zone-agnostic) wall-clock time, e.g. for calendar-day bucketing
+ * via `AggregateGroupByPeriodOptions`.
+ *
+ * `localTime`/`localStartTime`/`localEndTime` must be ISO-8601 instant strings (e.g. the output of
+ * `Date.prototype.toISOString()`). They are converted to local wall-clock digits using `zoneId` before
+ * being compared against each record's own local time, so `zoneId` should be the IANA time zone id
+ * (e.g. `"Europe/Stockholm"`) of whatever calendar day you actually want - not necessarily the device's
+ * current time zone. Contrast with `TimeRangeFilter`, whose `*UTC` fields are matched as plain
+ * zone-agnostic instants with no local-time conversion.
+ */
 export type LocalTimeRangeFilter =
   | {
       type: 'before' | 'after';
       localTime: string;
+      zoneId: string;
     }
   | {
       type: 'between';
       localStartTime: string;
       localEndTime: string;
+      zoneId: string;
     };
 
 export type TimeRangeFilter =

@@ -24,6 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.Period
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.reflect.KClass
 
@@ -385,8 +386,8 @@ internal fun JSONObject.getInstant(name: String): Instant {
     return Instant.parse(this.getString(name))
 }
 
-internal fun JSONObject.getLocalDateTime(name: String): LocalDateTime {
-    return LocalDateTime.ofInstant(Instant.parse(this.getString(name)), ZoneOffset.UTC)
+internal fun JSONObject.getLocalDateTime(name: String, zoneId: ZoneId): LocalDateTime {
+    return LocalDateTime.ofInstant(Instant.parse(this.getString(name)), zoneId)
 }
 
 internal fun JSONObject.getZoneOffsetOrNull(name: String): ZoneOffset? {
@@ -588,10 +589,11 @@ internal fun JSONObject.getTimeRangeFilter(name: String): TimeRangeFilter {
 
 internal fun JSONObject.getLocalTimeRangeFilter(name: String): TimeRangeFilter {
     val obj = requireNotNull(this.getJSONObject(name))
+    val zoneId = ZoneId.of(obj.getString("zoneId"))
     return when (val type = obj.getString("type")) {
-        "before" -> TimeRangeFilter.before(obj.getLocalDateTime("localTime"))
-        "after" -> TimeRangeFilter.after(obj.getLocalDateTime("localTime"))
-        "between" -> TimeRangeFilter.between(obj.getLocalDateTime("localStartTime"), obj.getLocalDateTime("localEndTime"))
+        "before" -> TimeRangeFilter.before(obj.getLocalDateTime("localTime", zoneId))
+        "after" -> TimeRangeFilter.after(obj.getLocalDateTime("localTime", zoneId))
+        "between" -> TimeRangeFilter.between(obj.getLocalDateTime("localStartTime", zoneId), obj.getLocalDateTime("localEndTime", zoneId))
         else -> throw IllegalArgumentException("Unexpected TimeRange type: $type")
     }
 }
