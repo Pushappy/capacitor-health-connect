@@ -399,7 +399,17 @@ Construct a type with a set of properties K of type T
 
 #### LocalTimeRangeFilter
 
-<code>{ type: 'before' | 'after'; localTime: string; } | { type: 'between'; localStartTime: string; localEndTime: string; }</code>
+Filters records by their own local (zone-agnostic) wall-clock time, e.g. for calendar-day bucketing
+via <a href="#aggregategroupbyperiodoptions">`AggregateGroupByPeriodOptions`</a>.
+
+`localTime`/`localStartTime`/`localEndTime` must be ISO-8601 instant strings (e.g. the output of
+`Date.prototype.toISOString()`). They are converted to local wall-clock digits using `zoneId` before
+being compared against each record's own local time, so `zoneId` should be the IANA time zone id
+(e.g. `"Europe/Stockholm"`) of whatever calendar day you actually want - not necessarily the device's
+current time zone. Contrast with <a href="#timerangefilter">`TimeRangeFilter`</a>, whose `*UTC` fields are matched as plain
+zone-agnostic instants with no local-time conversion.
+
+<code>{ type: 'before' | 'after'; localTime: string; zoneId: string; } | { type: 'between'; localStartTime: string; localEndTime: string; zoneId: string; }</code>
 
 
 #### TimeRangeSlicer
