@@ -619,6 +619,7 @@ fun checkAvailability(call: PluginCall) {
     ) {
       val res = JSObject().apply { put(resultPropertyName, "NotSupported") }
       call.resolve(res)
+      return
     }
 
     val requiredPermissions = setOf(permission)
