@@ -379,7 +379,7 @@ Construct a type with a set of properties K of type T
 
 #### AggregateByPeriodResult
 
-<code>{ entries: AggregateByPeriodEntry[] }</code>
+<code>{ entries: AggregateByPeriodEntry[]; }</code>
 
 
 #### AggregateByPeriodEntry
@@ -414,7 +414,7 @@ zone-agnostic instants with no local-time conversion.
 
 #### TimeRangeSlicer
 
-<code>{ period: 'days' | 'months' | 'weeks' | 'years', count: number }</code>
+<code>{ period: 'days' | 'months' | 'weeks' | 'years'; count: number; }</code>
 
 
 #### AggregateGroupByDurationOptions
